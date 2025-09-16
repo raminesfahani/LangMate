@@ -1,0 +1,54 @@
+name: Build & Publish NuGet Packages
+
+on:
+  push:
+    branches:
+      - main  # Trigger on push to main branch
+  workflow_dispatch:  # Allow manual trigger from GitHub UI
+
+jobs:
+  build-pack-publish:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: 🔄 Checkout repository
+      uses: actions/checkout@v3
+
+    - name: 🧰 Setup .NET SDK
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '9.0.x'  # Use your desired version
+
+    - name: 📦 Restore dependencies
+      run: dotnet restore
+
+    - name: 🛠️ Build solution
+      run: dotnet build --configuration Release --no-restore
+
+    - name: 📦 Pack NuGet packages
+      run: |
+        mkdir -p ./artifacts
+        for proj in $(find . -name *.csproj); do
+          echo "📦 Packing $proj"
+          dotnet pack "$proj" --configuration Release --output ./artifacts --no-build
+        done
+
+    - name: 📁 Upload NuGet packages as artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: nuget-packages
+        path: ./artifacts/*.nupkg
+        
+    #- name: 🚀 Push packages to Github
+    #  run: |
+    #    for package in ./artifacts/*.nupkg; do
+    #      echo "🚀 Publishing $package"
+    #      dotnet nuget push "$package" --source "https://nuget.pkg.github.com/raminesfahani/index.json" --api-key ${{ secrets.GH_API_KEY }} --skip-duplicate
+    #    done
+
+    - name: 🚀 Push packages to NuGet.org
+      run: |
+        for package in ./artifacts/*.nupkg; do
+          echo "🚀 Publishing $package"
+          dotnet nuget push "$package" --source https://api.nuget.org/v3/index.json --api-key ${{ secrets.NUGET_API_KEY }} --skip-duplicate
+        done

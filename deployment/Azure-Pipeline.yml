@@ -1,0 +1,71 @@
+name: '1.0.$(Rev:r)'
+
+trigger:
+  tags:
+    include:
+    - v*
+  branches:
+    include:
+    - master
+    - main
+
+stages:
+
+- stage: 'Build'
+  variables:
+    - name: BUILD_CONFIG
+      value: 'Release'
+    - name: SOLUTION
+      value: '*.sln'
+
+  jobs:
+  - job:
+    pool:
+      vmImage: 'ubuntu-latest'
+
+    workspace:
+      clean: all
+
+    steps:
+    - task: UseDotNet@2
+      displayName: Setup .NET 9.0
+      inputs:
+        packageType: "sdk"
+        version: "9.0.x"
+
+    - task: NuGetAuthenticate@1
+      displayName: 'NuGet Authenticate'
+
+    - task: DotNetCoreCLI@2
+      displayName: Restore dependencies
+      inputs:
+        command: 'restore'
+        projects: '$(SOLUTION)'
+
+    - task: DotNetCoreCLI@2
+      displayName: Build project
+      inputs:
+        command: 'build'
+        projects: '$(SOLUTION)'
+        arguments: '/p:Configuration=$(BUILD_CONFIG)'
+
+    - task: DotNetCoreCLI@2
+      displayName: 'Dotnet Pack'
+      inputs:
+        command: pack
+        packagesToPack: '**/*.csproj'
+        packDestination: '$(Build.ArtifactStagingDirectory)'
+        configuration: Release
+        versioningScheme: 'byEnvVar'
+        versionEnvVar: Build.BuildNumber
+
+    - task: PublishBuildArtifacts@1
+      displayName: 'Publish Artifact: drop'
+
+    - task: NuGetCommand@2
+      displayName: 'NuGet Push'
+      inputs:
+        command: push
+        packagesToPush: '$(Build.ArtifactStagingDirectory)/*.nupkg'
+        publishVstsFeed: '$(YourVstsFeed)'
+        allowPackageConflicts: false
