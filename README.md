@@ -1,26 +1,33 @@
-# Netrilo Infrastructure
+# LangMate
 
-[![Build & Publish NuGet Packages](https://github.com/raminesfahani/Netrilo_Infrastructure/actions/workflows/nuget-packages.yml/badge.svg)](https://github.com/raminesfahani/Netrilo_Infrastructure/actions/workflows/nuget-packages.yml)
+[![Build & Publish NuGet Packages](https://github.com/raminesfahani/LangMate/actions/workflows/nuget-packages.yml/badge.svg)](https://github.com/raminesfahani/LangMate/actions/workflows/nuget-packages.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-[![Language](https://img.shields.io/github/languages/top/raminesfahani/Netrilo_Infrastructure)](https://github.com/raminesfahani/Netrilo_Infrastructure/search?l=c%23)
-![GitHub Repo stars](https://img.shields.io/github/stars/raminesfahani/Netrilo_Infrastructure?style=social)
+[![Language](https://img.shields.io/github/languages/top/raminesfahani/LangMate)](https://github.com/raminesfahani/LangMate/search?l=c%23)
+![GitHub Repo stars](https://img.shields.io/github/stars/raminesfahani/LangMate?style=social)
 
-**Netrilo** is a modular infrastructure SDK for modern .NET applications.  
-It provides plug-and-play building blocks for common concerns like logging, persistence, web layers, messaging, and extensions — all in a clean, testable, and highly maintainable architectures, including Domain-Driven-Design, Event-Driven and so on.
+**LangMate** is a modular .NET SDK designed to simplify working with AI and large language models (LLMs) across multiple providers and languages.
 
-![Netrilo Logo](https://github.com/raminesfahani/Netrilo_Infrastructure/raw/main/logo.png)
+![LangMate Logo](https://github.com/raminesfahani/LangMate/raw/main/logo.png)
 
 ---
 
 ## 📖 About the Project
 
-This repository is the backbone of the `Netrilo` infrastructure layer, designed to be:
+Multilingual, multi-provider AI SDK for .NET — unified interface for LLMs and language models.
 
-- 🔌 **Modular**: Use only what you need.
-- 🧪 **Testable**: Fully decoupled, allowing unit testing and mocking.
-- ♻️ **Reusable**: Drop into any .NET Core / .NET 8+ project and / Fully compatible with .Net Aspire.
-- 🔍 **Discoverable**: Each module has its own documentation and NuGet package.
-- 📦 **Ready Deployment**: Easy, customizable and flexible Azure and Github artifacts deployment.
+Key features:
+
+Multi-Provider Support: OpenAI, HuggingFace, Azure OpenAI, and local/offline LLMs.
+
+Multilingual: Easily generate or translate text in multiple languages with unified prompts.
+
+Unified Interface: One interface (IAIClient) for all AI providers.
+
+Streaming Support: Stream responses in real time.
+
+Middleware & Caching: Built-in support for logging, moderation, and caching.
+
+Extensible & Modular: Add new AI providers or custom middleware easily.
 
 ---
 
@@ -139,4 +146,4 @@ This project is licensed under the [MIT License](LICENSE).
 ## 📬 Contact
 
 Maintained by [@raminesfahani](https://github.com/raminesfahani).  
-For feature requests or bug reports, please [open an issue](https://github.com/raminesfahani/Netrilo_Infrastructure/issues).
+For feature requests or bug reports, please [open an issue](https://github.com/raminesfahani/LangMate/issues).
