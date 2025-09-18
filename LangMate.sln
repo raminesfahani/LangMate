@@ -56,6 +56,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "deployment", "deployment", 
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LangMate.Extensions", "src\LangMate.Extensions\LangMate.Extensions.csproj", "{90725D82-D6AF-49CF-9E51-6952813AE9F8}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LangMate.Samples.WebAPI", "sample\LangMate.Samples.WebAPI\LangMate.Samples.WebAPI.csproj", "{21302283-0C0D-4527-8A77-E36C2554F333}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -126,6 +128,10 @@ Global
 		{90725D82-D6AF-49CF-9E51-6952813AE9F8}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{90725D82-D6AF-49CF-9E51-6952813AE9F8}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{90725D82-D6AF-49CF-9E51-6952813AE9F8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{21302283-0C0D-4527-8A77-E36C2554F333}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{21302283-0C0D-4527-8A77-E36C2554F333}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{21302283-0C0D-4527-8A77-E36C2554F333}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{21302283-0C0D-4527-8A77-E36C2554F333}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -147,6 +153,7 @@ Global
 		{DEF87C44-59A1-4DAC-8D97-5CB1685D640A} = {0718D8AB-B625-4B41-B662-9A958F74AB37}
 		{3387279D-D6AC-4521-9057-680C8BF8B497} = {0718D8AB-B625-4B41-B662-9A958F74AB37}
 		{90725D82-D6AF-49CF-9E51-6952813AE9F8} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
+		{21302283-0C0D-4527-8A77-E36C2554F333} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {C33304F0-2F6C-4F78-8BAD-7325098575CA}

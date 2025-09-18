@@ -1,4 +1,7 @@
-﻿using LangMate.Abstractions.Enums;
+﻿using AutoMapper;
+using LangMate.Abstractions.Enums;
+using LangMate.Abstractions.Options;
+using Microsoft.Extensions.AI;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -7,13 +10,8 @@ using System.Threading.Tasks;
 
 namespace LangMate.Abstractions.Dto
 {
-    public class AIResponse
+    public class AIResponse : ChatResponse
     {
-        /// <summary>
-        /// The final generated text response.
-        /// </summary>
-        public string Content { get; set; } = string.Empty;
-
         /// <summary>
         /// The name of the provider (e.g. OpenAI, HuggingFace).
         /// </summary>
@@ -24,22 +22,35 @@ namespace LangMate.Abstractions.Dto
         /// </summary>
         public string Model { get; set; } = string.Empty;
 
-        /// <summary>
-        /// Optional reason for finishing generation (e.g. stop, length).
-        /// </summary>
-        public string FinishReason { get; set; } = string.Empty;
-
-        /// <summary>
-        /// Optional total tokens used (if available).
-        /// </summary>
-        public int? TotalTokens { get; set; }
-
-        /// <summary>
-        /// Optional raw response (serialized JSON or raw body) for debugging or inspection.
-        /// </summary>
-        public string RawResponse { get; set; } = string.Empty;
-
         /// <summary>Indicates if the result was returned from cache.</summary>
         public bool IsCached { get; set; } = false;
+    }
+
+    public static class AIResponseExtensions
+    {
+        public static AIResponse ToAIResponse(this ChatResponse chatResponse, IMapper mapper, AIOptions options)
+        {
+            var response = mapper.Map<AIResponse>(chatResponse);
+            response.Model = options.Model;
+            response.Provider = options.ProviderType;
+
+            return response;
+        }
+
+        public static AIResponseChunk ToAIResponseChunk(this ChatResponseUpdate chatResponse, IMapper mapper, AIOptions options)
+        {
+            var response = mapper.Map<AIResponseChunk>(chatResponse);
+            
+            return response;
+        }
+    }
+
+    public class LangMateMappingProfile : Profile
+    {
+        public LangMateMappingProfile()
+        {
+            CreateMap<ChatResponse, AIResponse>().ReverseMap();
+            CreateMap<ChatResponseUpdate, AIResponseChunk>().ReverseMap();
+        }
     }
 }

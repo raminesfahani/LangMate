@@ -7,7 +7,16 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\LangMate.Abstractions\LangMate.Abstractions.csproj" />
+    <PackageReference Include="AutoMapper" Version="13.0.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\LangMate.Extensions\LangMate.Extensions.csproj" />
+    <ProjectReference Include="..\LangMate.Middleware\LangMate.Middleware.csproj" />
+    <ProjectReference Include="..\LangMate.Providers.AzureOpenAI\LangMate.Providers.AzureOpenAI.csproj" />
+    <ProjectReference Include="..\LangMate.Providers.HuggingFace\LangMate.Providers.HuggingFace.csproj" />
+    <ProjectReference Include="..\LangMate.Providers.LocalAI\LangMate.Providers.LocalAI.csproj" />
+    <ProjectReference Include="..\LangMate.Providers.OpenAI\LangMate.Providers.OpenAI.csproj" />
   </ItemGroup>
 
 </Project>

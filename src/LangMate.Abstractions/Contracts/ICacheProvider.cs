@@ -9,8 +9,8 @@ namespace LangMate.Abstractions.Contracts
 {
     public interface ICacheProvider
     {
-        void Set(string key, string value, TimeSpan ttl);
-        bool TryGet(string key, out string value);
+        void Set<T>(string key, T value, TimeSpan ttl);
+        bool TryGet<T>(string key, out T? value);
         void Remove(string key);
     }
 }

@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using Serilog;
+using LangMate.Cache;
 
 namespace LangMate.Middleware
 {
@@ -12,6 +12,7 @@ namespace LangMate.Middleware
     {
         public static IServiceCollection AddLangMateMiddleware(this IServiceCollection services, IConfiguration configuration, bool useApm = false)
         {
+            services.AddLangMateCache();
             services.AddScoped<IMiddlewareProvider, MiddlewareProvider>();
 
             if (useApm == true)

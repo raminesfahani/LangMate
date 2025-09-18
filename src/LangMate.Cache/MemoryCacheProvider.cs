@@ -7,12 +7,12 @@ namespace LangMate.Cache
     {
         private readonly IMemoryCache _cache = cache;
 
-        public void Set(string key, string value, TimeSpan ttl)
+        public void Set<T>(string key, T value, TimeSpan ttl)
         {
             _cache.Set(key, value, ttl);
         }
 
-        public bool TryGet(string key, out string value) => _cache.TryGetValue(key, out value);
+        public bool TryGet<T>(string key, out T? value) => _cache.TryGetValue(key, out value);
 
         public void Remove(string key)
         {

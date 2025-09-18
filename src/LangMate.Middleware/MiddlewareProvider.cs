@@ -2,23 +2,24 @@
 using LangMate.Abstractions.Dto;
 using LangMate.Abstractions.Options;
 using LangMate.Cache;
+using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Logging;
 using System.Diagnostics;
 
 namespace LangMate.Middleware
 {
-    public class MiddlewareProvider(ICacheProvider cache, TimeSpan ttl, ILogger<MiddlewareProvider> logger) : IMiddlewareProvider
+    public class MiddlewareProvider(ICacheProvider cache, ILogger<MiddlewareProvider> logger) : IMiddlewareProvider
     {
         private readonly ICacheProvider _cache = cache;
-        private readonly TimeSpan _ttl = ttl;
+        private readonly TimeSpan _ttl = TimeSpan.FromMinutes(2);
         private readonly ILogger<MiddlewareProvider> _logger = logger;
 
-        public async Task<AIResponse> InvokeAsync(string prompt, AIOptions options, IAIClient next, CancellationToken ct = default)
+        public async Task<AIResponse?> InvokeAsync(string prompt, AIOptions options, ChatRole chatRole, IAIClient client, bool newConversation = false, CancellationToken ct = default)
         {
             var stopwatch = Stopwatch.StartNew();
 
             _logger.LogInformation("🚀 AI Request Started | Provider: {Provider} | Model: {Model} | Lang: {Language} | Prompt: {PromptPreview}",
-                options.Provider,
+                options.ProviderType,
                 options.Model,
                 options.Language,
                 Truncate(prompt, 100)
@@ -28,29 +29,23 @@ namespace LangMate.Middleware
             {
                 var key = CacheKeyHelper.GenerateKey(options.Model, options.Language, prompt);
 
-                if (_cache.TryGet(key, out var cachedText))
+                if (_cache.TryGet<AIResponse>(key, out var cachedResponse))
                 {
-                    return new AIResponse
-                    {
-                        Content = cachedText,
-                        IsCached = true,
-                        Provider = options.Provider,
-                        Model = options.Model
-                    };
+                    return cachedResponse;
                 }
 
-                var response = await next.GenerateTextAsync(prompt, options, ct);
+                var response = await client.GenerateCompletionAsync(prompt, options, chatRole, newConversation, ct);
 
                 stopwatch.Stop();
 
                 _logger.LogInformation("✅ AI Response Completed | Tokens: {Tokens} | Cached: {IsCached} | Time: {Elapsed}ms | Output: {ResponsePreview}",
-                        response.TotalTokens ?? 0,
-                        response.IsCached,
+                        response?.Usage?.TotalTokenCount ?? 0,
+                        response?.IsCached,
                         stopwatch.ElapsedMilliseconds,
-                        Truncate(response.Content, 100)
+                        Truncate(response?.Text ?? "", 100)
                     );
 
-                _cache.Set(key, response.Content, _ttl);
+                _cache.Set(key, response, _ttl);
                 return response;
             }
             catch (Exception ex)
@@ -59,7 +54,7 @@ namespace LangMate.Middleware
                 stopwatch.Stop();
 
                 _logger.LogError(ex, "❌ AI Request Failed | Provider: {Provider} | Model: {Model} | Time: {Elapsed}ms",
-                    options.Provider,
+                    options.ProviderType,
                     options.Model,
                     stopwatch.ElapsedMilliseconds
                 );
