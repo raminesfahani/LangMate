@@ -1,22 +1,27 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-    <TargetFramework>net9.0</TargetFramework>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <Nullable>enable</Nullable>
-  </PropertyGroup>
+	<PropertyGroup>
+		<TargetFramework>net9.0</TargetFramework>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Nullable>enable</Nullable>
+		<PackageId>LangMate.Core</PackageId>
+		<IsPackable>true</IsPackable>
+		<Authors>Ramin Esfahani</Authors>
+		<Description>LangMate.Core is the central SDK for building modular, AI-powered pipelines across multiple language model providers such as OpenAI, Azure OpenAI, HuggingFace, and LocalAI.</Description>
+		<Version>1.0.1</Version>
+	</PropertyGroup>
 
-  <ItemGroup>
-    <PackageReference Include="AutoMapper" Version="13.0.1" />
-  </ItemGroup>
+	<ItemGroup>
+		<PackageReference Include="AutoMapper" Version="13.0.1" />
+	</ItemGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\LangMate.Extensions\LangMate.Extensions.csproj" />
-    <ProjectReference Include="..\LangMate.Middleware\LangMate.Middleware.csproj" />
-    <ProjectReference Include="..\LangMate.Providers.AzureOpenAI\LangMate.Providers.AzureOpenAI.csproj" />
-    <ProjectReference Include="..\LangMate.Providers.HuggingFace\LangMate.Providers.HuggingFace.csproj" />
-    <ProjectReference Include="..\LangMate.Providers.LocalAI\LangMate.Providers.LocalAI.csproj" />
-    <ProjectReference Include="..\LangMate.Providers.OpenAI\LangMate.Providers.OpenAI.csproj" />
-  </ItemGroup>
+	<ItemGroup>
+		<ProjectReference Include="..\LangMate.Extensions\LangMate.Extensions.csproj" />
+		<ProjectReference Include="..\LangMate.Middleware\LangMate.Middleware.csproj" />
+		<ProjectReference Include="..\LangMate.Providers.AzureOpenAI\LangMate.Providers.AzureOpenAI.csproj" />
+		<ProjectReference Include="..\LangMate.Providers.HuggingFace\LangMate.Providers.HuggingFace.csproj" />
+		<ProjectReference Include="..\LangMate.Providers.LocalAI\LangMate.Providers.LocalAI.csproj" />
+		<ProjectReference Include="..\LangMate.Providers.OpenAI\LangMate.Providers.OpenAI.csproj" />
+	</ItemGroup>
 
 </Project>
