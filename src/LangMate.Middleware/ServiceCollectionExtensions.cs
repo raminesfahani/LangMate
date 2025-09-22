@@ -1,10 +1,12 @@
 ﻿using LangMate.Abstractions.Contracts;
+using LangMate.Middleware.Middlewares;
 using LangMate.Middleware.Serilog;
+using LangMate.Persistence;
+using LangMate.Persistence.NoSQL.MongoDB;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using LangMate.Cache;
 
 namespace LangMate.Middleware
 {
@@ -12,8 +14,8 @@ namespace LangMate.Middleware
     {
         public static IServiceCollection AddLangMateMiddleware(this IServiceCollection services, IConfiguration configuration, bool useApm = false)
         {
-            services.AddLangMateCache();
-            services.AddScoped<IMiddlewareProvider, MiddlewareProvider>();
+            services.AddLangMateMemoryCache();
+            services.AddLangMateMongoDb(configuration);
 
             if (useApm == true)
                 services.AddApm();
@@ -24,6 +26,9 @@ namespace LangMate.Middleware
         public static IApplicationBuilder UseLangMateMiddleware(this IApplicationBuilder app, IConfiguration configuration, ILoggerFactory loggerFactory)
         {
             app.UseLogging(configuration, loggerFactory);
+            app.UseLangMateRequestLogging();     // logs all incoming requests
+            app.UseLangMateExceptionHandler();   // catch and serialize any errors
+            app.UseLangMateResiliency();         // retry, timeout, circuit breaker
 
             return app;
         }

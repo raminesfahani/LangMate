@@ -1,15 +1,13 @@
-﻿using AutoMapper;
-using LangMate.Abstractions;
+﻿using LangMate.Abstractions.Abstracts.Settings;
 using LangMate.Abstractions.Contracts;
-using LangMate.Abstractions.Dto;
 using LangMate.Abstractions.Options;
+using LangMate.Core.Providers;
 using LangMate.Middleware;
-using LangMate.Providers.LocalAI;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
+using Ollama;
 
 namespace LangMate.Core
 {
@@ -17,33 +15,28 @@ namespace LangMate.Core
     {
         public static IServiceCollection AddLangMateCore(this IServiceCollection services, IConfiguration configuration, bool useApm = false)
         {
-            AIOptions options = new();
-            services.Configure<AIOptions>(configuration.GetSection(nameof(AIOptions)));
-            configuration.GetSection(nameof(AIOptions)).Bind(options);
+            OllamaOptions options = new();
+            services.Configure<OllamaOptions>(configuration.GetSection(nameof(OllamaOptions)));
+            configuration.GetSection(nameof(OllamaOptions)).Bind(options);
 
-            services.AddLangMateMiddleware(configuration, useApm)
-                    .AddLocalAIServices(configuration);
+            services.AddLangMateMiddleware(configuration, useApm);
+
+            services.AddSingleton<IOllamaApiClient>(factory =>
+            {
+                return new OllamaApiClient(baseUri: new Uri(options.Endpoint));
+            });
+
+            services.AddScoped<IOllamaScraper, OllamaScraper>();
+            services.AddScoped<IOllamaFactoryProvider, OllamaFactoryProvider>();
 
             services.AddAutoMapper(cfg =>
             {
-                cfg.AddMaps(typeof(LangMate.Abstractions.AppSettingsBase).Assembly,
-                            typeof(LangMate.Cache.ServiceCollectionExtensions).Assembly,
+                cfg.AddMaps(typeof(AppSettingsBase).Assembly,
+                            typeof(Persistence.ServiceCollectionExtensions).Assembly,
                             typeof(LangMate.Core.ServiceCollectionExtensions).Assembly,
-                            typeof(LangMate.Middleware.ServiceCollectionExtensions).Assembly,
-                            typeof(LangMate.Providers.LocalAI.ServiceCollectionExtensions).Assembly
+                            typeof(LangMate.Middleware.ServiceCollectionExtensions).Assembly
                             );
             });
-
-
-            /// Register the AI client as a singleton
-            /// from the AI options provided.
-            services.AddSingleton(factory =>
-            {
-                var mapper = factory.GetRequiredService<IMapper>();
-                return AIClientFactory.CreateClient(options, mapper);
-            });
-
-            services.AddScoped<IAICoreService, AICoreService>();
 
             return services;
         }

@@ -7,6 +7,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+	  <PackageReference Include="Polly" Version="8.6.3" />
 	  <PackageReference Include="Serilog" Version="4.3.0" />
 	  <PackageReference Include="Serilog.AspNetCore" Version="9.0.0" />
 	  <PackageReference Include="Serilog.Enrichers.CorrelationId" Version="3.0.1" />
@@ -18,7 +19,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\LangMate.Abstractions\LangMate.Abstractions.csproj" />
-    <ProjectReference Include="..\LangMate.Cache\LangMate.Cache.csproj" />
+    <ProjectReference Include="..\LangMate.Cache\LangMate.Persistence.csproj" />
   </ItemGroup>
 
 </Project>
