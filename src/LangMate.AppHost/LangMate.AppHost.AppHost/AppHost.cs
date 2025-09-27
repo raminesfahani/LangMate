@@ -12,15 +12,15 @@ var ollama = builder.AddOllama("ollama", 11434)
                     .WithImageTag("latest")
                     .WithDataVolume() // Adds a data volume to store models
                     .WithGPUSupport(); // Enable GPU support
-                    //.WithLifetime(ContainerLifetime.Persistent); // Keep the container running
+                                       //.WithLifetime(ContainerLifetime.Persistent); // Keep the container running
 
-//var api = builder.AddProject<Projects.LangMate_AppHost_ApiService>("langmate-api")
-//                .WithHttpHealthCheck("/health")
-//                .WithHttpEndpoint(name: "external", port: 5001)
-//                .WithReference(mongo)
-//                .WaitFor(mongo)
-//                .WithReference(ollama)
-//                .WaitFor(ollama);
+var api = builder.AddProject<Projects.LangMate_AppHost_ApiService>("langmate-api")
+                .WithHttpHealthCheck("/health")
+                .WithHttpEndpoint(name: "external", port: 5001)
+                .WithReference(mongo)
+                .WaitFor(mongo)
+                .WithReference(ollama)
+                .WaitFor(ollama);
 
 builder.AddProject<Projects.LangMate_AppHost_BlazorUI>("langmate-ui")
         .WithExternalHttpEndpoints()
