@@ -8,6 +8,7 @@
 
 	<ItemGroup>
 		<PackageReference Include="DotEnvFile" Version="2.1.0" />
+		<PackageReference Include="System.Drawing.Common" Version="6.0.0" />
 		<PackageReference Include="xunit.abstractions" Version="2.0.3" />
 	</ItemGroup>
 </Project>

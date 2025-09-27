@@ -23,8 +23,4 @@
 		<ProjectReference Include="..\LangMate.Middleware\LangMate.Middleware.csproj" />
 	</ItemGroup>
 
-	<ItemGroup>
-	  <Folder Include="Dto\" />
-	</ItemGroup>
-
 </Project>

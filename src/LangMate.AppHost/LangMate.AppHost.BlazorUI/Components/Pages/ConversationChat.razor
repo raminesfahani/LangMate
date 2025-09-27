@@ -1,0 +1,652 @@
+﻿@using System.Text
+@using LangMate.Abstractions.Abstracts.Documents
+@using LangMate.Abstractions.Contracts
+@using LangMate.AppHost.BlazorUI.Models
+@using LangMate.AppHost.BlazorUI.Services
+@using LangMate.AppHost.BlazorUI.Models
+
+@using Markdig;
+@using Microsoft.AspNetCore.WebUtilities
+@using Ollama
+@inject NavigationManager Navigation
+@inject IOllamaFactoryProvider OllamaFactoryProvider
+@inject OllamaService OllamaService
+@inject HttpClient Http
+@inject ToastService ToastService
+@inject IWebHostEnvironment WebHostEnvironment
+@inject IJSRuntime JS
+@implements IAsyncDisposable
+
+<ConfirmDialog @ref="dialog" />
+
+<div class="messages" id="messages" @ref="chatMessagesContainerRef">
+    @if (isStreaming == false && (conversation == null || conversation.Messages == null || conversation.Messages.Any() == false))
+    {
+        <div class="intro-message">
+            <div class="text-center mb-4">
+                <img src="/logo.png" style="max-width: 200px; width: 100%" />
+            </div>
+            <h2>LangMate — Chat Smarter, Locally</h2>
+            <p class="lead">
+                LangMate is a modern AI assistant and developer SDK powered by Ollama and Blazor. Chat with local LLMs, manage conversations, and integrate advanced AI features into your own apps — all securely on your machine.
+            </p>
+            <div class="suggestion-chips">
+                @foreach (var text in suggestionChips)
+                {
+                    <button class="suggestion-chip"
+                            @onclick="@(async () => { userInput = text; await SendMessageAsync(); })">
+                        @text
+                    </button>
+                }
+            </div>
+        </div>
+    }
+    else
+    {
+        @foreach (var message in conversation?.Messages ?? [])
+        {
+            @if (message.Role == Ollama.MessageRole.User)
+            {
+                <div class="message user">
+                    <div class="message-content">
+                        @((MarkupString)ConvertMarkdownToHtml(message.Content))
+
+                        @if (message.Images != null && message.Images.Any())
+                        {
+                            <div class="image-attachments mt-2">
+                                @foreach (var img in message.Images)
+                                {
+                                    <div class="position-relative d-inline-block me-2 mb-2">
+                                        <Image src="@("data:image/jpeg;base64," + img)" Class="rounded float-start me-2" IsThumbnail="true" Style="max-width: 300px;width: 100%" />
+                                    </div>
+                                }
+                            </div>
+                        }
+
+                    </div>
+                </div>
+            }
+            else if (message.Role == Ollama.MessageRole.System)
+            {
+                <div class="message ai">
+                    <div class="message-content">
+                        <div class="message-data-time mb-2">
+                            <Badge color="BadgeColor.Warning">System Message</Badge>
+                        </div>
+                        @((MarkupString)ConvertMarkdownToHtml(message.Content))
+
+                        @if (message.Images != null && message.Images.Any())
+                        {
+                            <div class="image-attachments mt-2">
+                                @foreach (var img in message.Images)
+                                {
+                                    <div class="position-relative d-inline-block me-2 mb-2">
+                                        <Image src="@("data:image/jpeg;base64," + img)" Class="rounded float-start me-2" IsThumbnail="true" Style="max-width: 300px;width: 100%" />
+                                    </div>
+                                }
+                            </div>
+                        }
+                    </div>
+                </div>
+            }
+            else
+            {
+                <div class="message ai">
+                    <div class="message-content">
+                        @((MarkupString)ConvertMarkdownToHtml(message.Content))
+
+                        @if (message.Images != null && message.Images.Any())
+                        {
+                            <div class="image-attachments mt-2">
+                                @foreach (var img in message.Images)
+                                {
+                                    <div class="position-relative d-inline-block me-2 mb-2">
+                                        <Image src="@("data:image/jpeg;base64," + img)" Class="rounded float-start me-2" IsThumbnail="true" Style="max-width: 300px;width: 100%" />
+                                    </div>
+                                }
+                            </div>
+                        }
+                    </div>
+                </div>
+            }
+        }
+    }
+
+    @if (isStreaming)
+    {
+        @if (string.IsNullOrWhiteSpace(responseStreamText))
+        {
+            <div class="message ai">
+                <div class="message-content">
+                    <div class="typing-indicator">
+                        <div class="me-2">Thinking</div>
+                        <div class="typing-dot"></div>
+                        <div class="typing-dot"></div>
+                        <div class="typing-dot"></div>
+                    </div>
+                </div>
+            </div>
+        }
+        else
+        {
+            <div class="message ai">
+                <div class="message-content">
+                    @((MarkupString)ConvertMarkdownToHtml(responseStreamText))
+                </div>
+            </div>
+        }
+    }
+</div>
+<div class="input-area">
+    @if (isUploading)
+    {
+        <Progress Class="mb-1">
+            <ProgressBar Type="ProgressType.StripedAndAnimated" Color="ProgressColor.Primary" Width="100" Label="Uploading..." />
+        </Progress>
+    }
+    <div class="mb-3" style="align-items: end;">
+        <div class="flex-row">
+            <Switch @bind-Value="systemMessage" Label="Send as system message" />
+            <Button Color="ButtonColor.Link" Size="ButtonSize.ExtraSmall" TooltipTitle="A system message is a way to set the context, personality, or rules the AI should follow for the conversation.">
+                <Icon Name="IconName.QuestionCircle"></Icon>
+            </Button>
+        </div>
+        <div class="flex-row">
+            <Button Color="ButtonColor.Link" Size="ButtonSize.ExtraSmall" TooltipTitle="This is the actual AI model that performs the response generation.">
+                <Icon Name="IconName.QuestionCircle"></Icon>
+            </Button>
+            <label class="input-label me-2">Model:</label>
+            <select class="form-select mt-2" @bind="selectedModel">
+                <option disabled value="">Select a Model</option>
+                @foreach (var m in localModels)
+                {
+                    <option value="@m.Model1?.Split(":")[0]">@m.Model1</option>
+                }
+            </select>
+        </div>
+    </div>
+    <div class="input-container">
+        <Button Color="ButtonColor.Primary" title="Upload File" @onclick="TriggerFileUpload" Disabled="isStreaming || isUploading">
+            <Icon Name="IconName.Paperclip"></Icon>
+        </Button>
+        <!-- Pending file preview container -->
+        @if (uploadedFiles.Any() && isStreaming == false)
+        {
+            <div class="file-previews my-2 d-flex">
+                @foreach (var file in uploadedFiles)
+                {
+                    <div class="position-relative">
+                        <Image Src="@file" Class="rounded float-start me-2" IsThumbnail="true" Style="max-width: 100px;" />
+                        <Button Class="position-absolute" TooltipTitle="Delete" Style="right: -5px; top: -10px" @onclick="@(() => RemoveFile(file))">
+                            <Icon Name="IconName.Trash3" Class="bg-dark rounded p-1" Color="IconColor.Danger"></Icon>
+                        </Button>
+                    </div>
+                }
+            </div>
+        }
+        <InputFile OnChange="HandleFileUpload"
+                   id="file-upload"
+                   style="display: none"
+                   @ref="uploadFileRef"
+                   accept="image/*"></InputFile>
+        <textarea id="user-input"
+                  @bind="@userInput"
+                  rows="2"
+                  @ref="userInputRef"
+                  @oninput="UpdateUserInput"
+                  placeholder="Ask anything..."
+                  disabled="@(isStreaming || isUploading)">
+        </textarea>
+
+        <Button Disabled="isUploading || isStreaming"
+                Color="ButtonColor.Primary"
+                TooltipTitle="Send the prompt"
+                @onclick="@(async () => await SendMessageAsync())">
+            <Icon Name="IconName.SendFill"></Icon>
+        </Button>
+    </div>
+
+</div>
+
+
+@code {
+    [Parameter] public string? ConversationId { get; set; }
+    [Parameter] public EventCallback<string> OnConversationUpdated { get; set; }
+
+    private DotNetObjectReference<ConversationChat>? dotNetHelper;
+    private ConfirmDialog dialog;
+    private ElementReference chatMessagesContainerRef;
+    private ElementReference userInputRef;
+    private ConversationDocument? conversation;
+    private MessageRole selectedRole = MessageRole.User;
+    private bool systemMessage
+    {
+        get => selectedRole == MessageRole.System;
+        set => selectedRole = value ? MessageRole.System : MessageRole.User;
+    }
+    private string userInput = string.Empty;
+    private string selectedModel = "";
+    private bool isStreaming = false;
+    private string responseStreamText = "";
+    List<Model> localModels = [];
+
+    private InputFile uploadFileRef;
+    private List<string> FilePreviews = new();
+    private List<string> uploadedFiles = new();
+    private int uploadProgress = 0;
+    private bool isUploading = false;
+    private List<string> suggestionChips = new()
+    {
+        // 🌟 General Knowledge
+        "What’s the difference between machine learning and deep learning?",
+        "Summarize the causes of World War I",
+
+        // 📚 Learning & Study
+        "Help me learn Python basics",
+        "Explain recursion with a simple example",
+        "Quiz me on world capitals"
+    };
+
+    [JSInvokable]
+    public async Task OnEnterPressed()
+    {
+        await SendMessageAsync();
+    }
+
+    private void SwitchChanged(bool value)
+    {
+        systemMessage = value;
+        selectedRole = systemMessage ? MessageRole.System : MessageRole.User;
+    }
+
+    private async Task<AutoCompleteDataProviderResult<Model>> ModelsDataProvider(AutoCompleteDataProviderRequest<Model> request)
+    {
+        return await Task.FromResult(request.ApplyTo(localModels.OrderBy(model => model.Model1?.Split(":")[0])));
+    }
+
+    private void OnAutoCompleteChanged(Model selected)
+    {
+        selectedModel = selected.Model1?.Split(":")[0] ?? "";
+    }
+
+    private async Task TriggerFileUpload()
+    {
+        await JS.InvokeVoidAsync("triggerClick", uploadFileRef.Element);
+    }
+
+    private async Task HandleFilePreview(InputFileChangeEventArgs e)
+    {
+        //FilePreviews.Clear();
+
+        foreach (var file in e.GetMultipleFiles())
+        {
+            if (file.ContentType.StartsWith("image/"))
+            {
+                // Generate image preview as base64
+                var resized = await file.RequestImageFileAsync(file.ContentType, 300, 300);
+                var buffer = new byte[resized.Size];
+                await resized.OpenReadStream().ReadAsync(buffer);
+
+                string base64 = Convert.ToBase64String(buffer);
+                string imageDataUrl = $"data:{file.ContentType};base64,{base64}";
+                FilePreviews.Add(imageDataUrl);
+            }
+            // else if (file.ContentType.StartsWith("text/") || file.ContentType == "application/json")
+            // {
+            //     using var streamReader = new StreamReader(file.OpenReadStream());
+            //     var content = await streamReader.ReadToEndAsync();
+            //     FilePreviews.Add($"Text File: {file.Name}\n\n" + content.Substring(0, Math.Min(200, content.Length)) + "...");
+            // }
+            // else
+            // {
+            //     FilePreviews.Add($"Unsupported file: {file.Name} ({file.ContentType})");
+            // }
+        }
+
+        await InvokeAsync(StateHasChanged);
+    }
+
+    public void RemoveFile(string file)
+    {
+        uploadedFiles.Remove(file);
+        StateHasChanged();
+    }
+
+    private async Task HandleFileUpload(InputFileChangeEventArgs e)
+    {
+        try
+        {
+            //await HandleFilePreview(e);
+
+            isUploading = true;
+            var file = e.File;
+            var apiUrl = Navigation.BaseUri + "api/FileUpload";
+            using var content = new MultipartFormDataContent();
+            using var fileContent = new StreamContent(file.OpenReadStream(10 * 1024 * 1024));
+            fileContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue(file.ContentType);
+            content.Add(fileContent, "file", file.Name);
+            await InvokeAsync(StateHasChanged);
+
+            var response = await Http.PostAsync(apiUrl, content);
+            response.EnsureSuccessStatusCode();
+
+            uploadProgress = 100;
+            var result = await response.Content.ReadFromJsonAsync<FileUploadResponse>();
+
+            if (result == null || string.IsNullOrEmpty(result.FilePath))
+            {
+                ToastService.Notify(new ToastMessage(ToastType.Danger, $"File upload failed: No file path returned."));
+            }
+            else
+            {
+                uploadedFiles.Add(result.FilePath);
+            }
+        }
+        catch (Exception ex)
+        {
+            ToastService.Notify(new ToastMessage(ToastType.Danger, $"File Upload Failed: {ex.Message}"));
+        }
+        finally
+        {
+            isUploading = false;
+            uploadProgress = 0;
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (!string.IsNullOrEmpty(ConversationId))
+        {
+            conversation = await OllamaFactoryProvider.GetConversationAsync(ConversationId);
+        }
+        else
+        {
+            conversation = null;
+        }
+
+        StateHasChanged();
+    }
+
+    private async Task LoadLocalModelsAsync()
+    {
+        Console.WriteLine("Loading local models...");
+        try
+        {
+            localModels.Clear();
+            var response = await OllamaService.GetLocalModels();
+            if (response != null && response.Models != null && response.Models.Any())
+            {
+                localModels = response.Models.ToList();
+            }
+        }
+        catch (Exception ex)
+        {
+            ToastService.Notify(new ToastMessage(ToastType.Danger, $"Failed to load models: {ex.Message}"));
+        }
+
+        if (localModels.Any() && string.IsNullOrEmpty(selectedModel))
+        {
+            selectedModel = localModels.First().Model1?.Split(":")[0] ?? "";
+        }
+        else
+        {
+            await ShowDownloadModelConfirmationAsync();
+        }
+    }
+
+    private void LoadQueryParam()
+    {
+        var uri = Navigation.ToAbsoluteUri(Navigation.Uri);
+        var query = QueryHelpers.ParseQuery(uri.Query);
+        if (query.TryGetValue("model", out var model))
+        {
+            selectedModel = model.ToString();
+        }
+        else
+        {
+            selectedModel = localModels.FirstOrDefault()?.Model1?.Split(":")[0] ?? "";
+        }
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            dotNetHelper = DotNetObjectReference.Create(this);
+            await JS.InvokeVoidAsync("attachEnterHandler", userInputRef, dotNetHelper);
+
+            await FocusUserInputAsync();
+            await LoadLocalModelsAsync();
+            LoadQueryParam();
+            await InvokeAsync(StateHasChanged);
+        }
+
+        await ScrollToBottomAsync();
+    }
+
+    private async Task ShowDownloadModelConfirmationAsync()
+    {
+        var options = new ConfirmDialogOptions
+        {
+            YesButtonText = "Go",
+            YesButtonColor = ButtonColor.Primary,
+            NoButtonText = "Decline",
+            NoButtonColor = ButtonColor.Danger,
+            Dismissable = false,
+            AutoFocusYesButton = true,
+            IsVerticallyCentered = true
+        };
+
+        var confirmation = await dialog.ShowAsync(
+            title: "Need a Model",
+            message1: "You need to download a model at least to start a conversation.",
+            message2: "Do you want to go to the Models page to download a model?",
+            confirmDialogOptions: options);
+
+        if (confirmation)
+        {
+            Navigation.NavigateTo("/ollama-models", false);
+        }
+        else
+        {
+            Navigation.NavigateTo("/", false);
+        }
+    }
+
+    public async Task SendMessageAsync()
+    {
+        if (string.IsNullOrWhiteSpace(userInput))
+        {
+            ToastService.Notify(new ToastMessage(ToastType.Warning, "Please enter a prompt!"));
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(selectedModel))
+        {
+            ToastService.Notify(new ToastMessage(ToastType.Warning, "Please choose a model for the conversation!"));
+            return;
+        }
+
+        /// Start a new conversation if ConversationId is null
+        if (ConversationId == null)
+        {
+            try
+            {
+                isStreaming = true;
+
+                var request = new GenerateChatCompletionRequest()
+                {
+                    Messages = new List<Ollama.Message>()
+                    {
+                        new Ollama.Message()
+                        {
+                            Role = selectedRole,
+                            Content = userInput, //+ string.Join(" \n", uploadedFiles.Select(x=> " " + Path.Combine(WebHostEnvironment.WebRootPath, x))),
+                            Images = uploadedFiles.Select(x=> Convert.ToBase64String(File.ReadAllBytes(Path.Combine(WebHostEnvironment.WebRootPath, x)))).ToArray(),
+                        }
+                    },
+                    Model = selectedModel,
+                    Stream = true,
+                };
+                var response = await OllamaFactoryProvider.StartNewChatCompletionAsync(request);
+
+                responseStreamText = "";
+                userInput = "";
+                ConversationId = response.conversationId;
+                conversation = await OllamaFactoryProvider.GetConversationAsync(ConversationId);
+                await OnConversationUpdated.InvokeAsync(ConversationId);
+                StateHasChanged();
+                await ScrollToBottomAsync();
+
+                await foreach (var item in response.response)
+                {
+                    responseStreamText += item?.Message.Content;
+                    StateHasChanged();
+
+                    await JS.InvokeVoidAsync("scrollToBottom", chatMessagesContainerRef);
+
+                    await Task.Yield(); // let the browser render
+                }
+
+                if (string.IsNullOrWhiteSpace(responseStreamText) == false)
+                    await OllamaFactoryProvider.AddMessageToConversation(response.conversationId, new Message
+                    {
+                        Role = MessageRole.Assistant,
+                        Content = responseStreamText
+                    });
+
+                isStreaming = false;
+
+                conversation = await OllamaFactoryProvider.GetConversationAsync(ConversationId);
+                StateHasChanged();
+                await ScrollToBottomAsync();
+
+                await OnConversationUpdated.InvokeAsync(ConversationId);
+
+                Navigation.NavigateTo($"/conversations?conversationId={ConversationId}", false);
+            }
+            catch (Exception ex)
+            {
+                ToastService.Notify(new ToastMessage(ToastType.Danger, ex.Message));
+            }
+            finally
+            {
+                isStreaming = false;
+                systemMessage = false;
+                userInput = "";
+                responseStreamText = "";
+                uploadedFiles.Clear();
+                await ScrollToBottomAsync();
+                await FocusUserInputAsync();
+            }
+        }
+        /// Continue the existing conversation if ConversationId is not null
+        else
+        {
+            try
+            {
+                isStreaming = true;
+
+                var request = new GenerateChatCompletionRequest()
+                {
+                    Messages = new List<Ollama.Message>()
+                    {
+                        new Ollama.Message()
+                        {
+                            Role = selectedRole,
+                            Content = userInput,
+                            Images = uploadedFiles.Select(x=> Convert.ToBase64String(File.ReadAllBytes(Path.Combine(WebHostEnvironment.WebRootPath, x)))).ToArray(),
+                        }
+                    },
+                    Model = selectedModel,
+                    Stream = true,
+                };
+                var response = await OllamaFactoryProvider.GenerateChatCompletionAsync(ConversationId, request);
+
+                responseStreamText = "";
+                userInput = "";
+                conversation = await OllamaFactoryProvider.GetConversationAsync(ConversationId);
+                await OnConversationUpdated.InvokeAsync(ConversationId);
+                StateHasChanged();
+                await ScrollToBottomAsync();
+
+                await foreach (var item in response)
+                {
+                    responseStreamText += item?.Message.Content;
+                    StateHasChanged();
+
+                    await JS.InvokeVoidAsync("scrollToBottom", chatMessagesContainerRef);
+
+                    await Task.Yield(); // let the browser render
+                }
+
+                if (string.IsNullOrWhiteSpace(responseStreamText) == false)
+                    await OllamaFactoryProvider.AddMessageToConversation(ConversationId, new Message
+                    {
+                        Role = MessageRole.Assistant,
+                        Content = responseStreamText
+                    });
+
+                isStreaming = false;
+
+                conversation = await OllamaFactoryProvider.GetConversationAsync(ConversationId);
+                StateHasChanged();
+                await ScrollToBottomAsync();
+
+                await OnConversationUpdated.InvokeAsync(ConversationId);
+
+                Navigation.NavigateTo($"/conversations?conversationId={ConversationId}", false);
+            }
+            catch (Exception ex)
+            {
+                ToastService.Notify(new ToastMessage(ToastType.Danger, ex.Message));
+            }
+            finally
+            {
+                isStreaming = false;
+                systemMessage = false;
+                userInput = "";
+                responseStreamText = "";
+                uploadedFiles.Clear();
+                await ScrollToBottomAsync();
+                await FocusUserInputAsync();
+            }
+        }
+    }
+
+    private async Task ScrollToBottomAsync()
+    {
+        await Task.Delay(200);
+        await JS.InvokeVoidAsync("scrollToBottom", chatMessagesContainerRef);
+    }
+
+    private async Task FocusUserInputAsync()
+    {
+        await JS.InvokeVoidAsync("focusElement", userInputRef);
+    }
+
+    private void UpdateUserInput(ChangeEventArgs e)
+    {
+        userInput = e.Value?.ToString() ?? "";
+    }
+
+    private async Task HandleKeyDown(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter")
+        {
+
+            await SendMessageAsync();
+        }
+    }
+
+    public ValueTask DisposeAsync()
+    {
+        return ValueTask.CompletedTask;
+    }
+
+    public string ConvertMarkdownToHtml(string markdown)
+    {
+        return Markdig.Markdown.ToHtml(markdown);
+    }
+}

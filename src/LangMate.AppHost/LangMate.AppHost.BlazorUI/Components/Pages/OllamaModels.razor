@@ -1,0 +1,241 @@
+﻿@page "/ollama-models"
+@using LangMate.Abstractions.Abstracts.Documents
+@using LangMate.Abstractions.Contracts
+@using LangMate.AppHost.BlazorUI.Services
+
+@using Ollama
+@inject OllamaService ollamaService
+
+<PageTitle>Ollama Configurations</PageTitle>
+
+<div class="p-5 overflow-y-scroll">
+
+    <h2><Icon Name="IconName.Box" Class="me-3"></Icon>Ollama Models</h2>
+
+    <br />
+    <div class="mb-5 d-flex">
+        <TextInput Class="flex-fill" Placeholder="Search for a model..." Value="@search" ValueExpression="() => search" ValueChanged="@(async (value) => await SearchChanged(value))" />
+        <Button Type="ButtonType.Button" Color="ButtonColor.Primary" @onclick="@(async e => await SearchChanged(search))">
+            <Icon Name="IconName.Search"></Icon>
+        </Button>
+    </div>
+
+    <div class="mb-5">
+        @if (models.Any(x => x.IsPulling))
+        {
+            <h2 class="mb-4"><Icon Name="IconName.CloudDownload" Class="me-3"></Icon>Download Models Queue</h2>
+
+            @foreach (var item in models.Where(x => x.IsPulling))
+            {
+                <Alert Class="my-2" Color="AlertColor.Warning">
+                    <p class="small">Pulling model <b class="text-primary">@(item.Name)</b>: <label>@($"Downloaded {item.Completed:F1}/{item.TotalSize:F1} MB ({item.PullingPercentage:P1})")</label></p>
+                    <Progress Class="mt-3">
+                        <ProgressBar Type="ProgressType.StripedAndAnimated" Width="100" Color="ProgressColor.Primary" Label="@($"{item.PullingPercentage:P1}")" />
+                    </Progress>
+                </Alert>
+            }
+        }
+    </div>
+
+    <div class="table-responsive">
+        <table class="table table-bordered">
+            <thead class="table-dark">
+                <tr>
+                    <td class="fw-bold">Model</td>
+                    <td class="fw-bold">Description</td>
+                    <td class="fw-bold">Status</td>
+                    <td class="fw-bold" style="min-width: 200px"></td>
+                </tr>
+            </thead>
+            @foreach (var model in models ?? [])
+            {
+                <tr>
+                    <td class="text-primary">@model.Name</td>
+                    <td class="small">
+                        @model.Description
+                    </td>
+                    <td class="small" style="min-width: 100px">
+                        @if (model.Installed)
+                        {
+                            <b class="text-success" style="background: initial">Installed</b>
+                        }
+                        else
+                        {
+                            <small class="text-secondary" style="background: initial">Not Installed</small>
+                        }
+                    </td>
+                    <td align="center">
+                        <div class="d-grid gap-2 mx-auto" style="background: initial">
+                            <Button Active="true"
+                                    Size="ButtonSize.Small"
+                                    Color="model.Installed? ButtonColor.Success: ButtonColor.Primary"
+                                    @onclick="@(async e => await PullModel(model))"
+                                    Loading="model.IsPulling"
+                                    Disabled="model.IsPulling"
+                                    LoadingText="@model.PullingTemplate">
+                                <Icon Name="IconName.CloudDownload" Class="mx-1"></Icon>
+                                @(model.Installed ? "Update" : "Download")
+                            </Button>
+                            @if (model.IsPulling)
+                            {
+                                <Button Size="ButtonSize.Small"
+                                        Color="ButtonColor.Danger"
+                                        @onclick="@(() => CancelDownload(model))">
+                                    <Icon Name="IconName.StopFill" Class="mx-1"></Icon>
+                                    Cancel
+                                </Button>
+                            }
+                            @if (model.Installed)
+                            {
+                                <Button Size="ButtonSize.Small"
+                                        Color="ButtonColor.Warning"
+                                        @onclick="@(() => StartConversation(model))">
+                                    <Icon Name="IconName.ChatDotsFill" Class="mx-1"></Icon>
+                                    Start Chat
+                                </Button>
+                                <Button Size="ButtonSize.Small"
+                                        Color="ButtonColor.Danger"
+                                        @onclick="@(() => DeleteModel(model))">
+                                    <Icon Name="IconName.Trash" Class="mx-1"></Icon>
+                                    Delete
+                                </Button>
+                            }
+                        </div>
+                    </td>
+                </tr>
+            }
+        </table>
+    </div>
+</div>
+
+@code {
+    [Inject] protected PreloadService PreloadService { get; set; }
+    [Inject] protected ToastService ToastService { get; set; }
+    [Inject] protected NavigationManager Navigation{ get; set; }
+    List<OllamaExtendedModel> models = [];
+    List<Model> localModels = [];
+    string notification = "";
+    string search = "";
+
+    public class OllamaExtendedModel : OllamaModel
+    {
+        public bool Installed { get; set; } = false;
+        public bool IsPulling { get; set; } = false;
+        public string PullingTemplate { get; set; } = "Downloading...";
+        public double PullingPercentage { get; set; } = 0;
+        public double? TotalSize { get; set; }
+        public double? Completed { get; set; }
+        public CancellationTokenSource? Cts { get; set; }
+
+        public OllamaExtendedModel()
+        {
+
+        }
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadList();
+    }
+
+    private async Task LoadList()
+    {
+        try
+        {
+            localModels.Clear();
+            models.Clear();
+
+            PreloadService.Show();
+            var localModelsResponse = await ollamaService.GetLocalModels();
+            localModels.AddRange(localModelsResponse?.Models ?? []);
+            var modelsResponse = await ollamaService.GetModelListAsync(search);
+            models.AddRange(modelsResponse.Select(x => new OllamaExtendedModel()
+            {
+                Installed = localModels.ToList().Any(lm => lm.Model1?.Split(":").FirstOrDefault()?.ToLower() == x.Name.ToLower()),
+                CreatedAt = x.CreatedAt,
+                Description = x.Description,
+                Id = x.Id,
+                Name = x.Name
+            }));
+        }
+        catch (Exception ex)
+        {
+            ToastService.Notify(new(ToastType.Danger, $"Error: {ex.Message}."));
+        }
+        finally
+        {
+            PreloadService.Hide();
+        }
+
+        StateHasChanged();
+    }
+
+    public async Task PullModel(OllamaExtendedModel model)
+    {
+        try
+        {
+            model.Cts = new CancellationTokenSource();
+            ToastService.Notify(new(ToastType.Info, $"Starting download for model '{model.Name}'..."));
+            model.IsPulling = true;
+            await InvokeAsync(StateHasChanged);
+
+            await ollamaService.PullModelAsync(model.Name, async progress =>
+            {
+                if (progress.Completed.HasValue && progress.Total.HasValue)
+                {
+                    double completedMB = progress.Completed.Value / 1_000_000.0;
+                    double totalMB = progress.Total.Value / 1_000_000.0;
+                    double percent = Math.Min(progress.Completed.Value / (double)progress.Total.Value, 1.0);
+
+                    notification = $"Downloaded {completedMB:F1}/{totalMB:F1} MB ({percent:P1})";
+                    model.PullingTemplate = $"Downloaded {percent:P1}";
+                    model.PullingPercentage = percent;
+                    model.TotalSize = totalMB;
+                    model.Completed = completedMB;
+                    await InvokeAsync(StateHasChanged);
+                }
+            }, model.Cts.Token);
+
+            notification = $"✅ Model '{model.Name}' downloaded successfully!";
+            ToastService.Notify(new(ToastType.Success, notification));
+
+            await LoadList();
+        }
+        catch (OperationCanceledException)
+        {
+            notification = $"❌ Download for model '{model.Name}' was canceled.";
+            ToastService.Notify(new(ToastType.Danger, notification));
+        }
+        finally
+        {
+            model.IsPulling = false;
+            model.PullingTemplate = "Downloading...";
+            model.Cts?.Dispose();
+            model.Cts = null;
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+
+    public void CancelDownload(OllamaExtendedModel model)
+    {
+        model.Cts?.Cancel();
+    }
+
+    private async Task SearchChanged(string? value)
+    {
+        search = value;
+        await LoadList();
+    }
+
+    public void StartConversation(OllamaExtendedModel model)
+    {
+        Navigation.NavigateTo("conversations?model=" + model.Name);
+    }
+
+    public async Task DeleteModel(OllamaExtendedModel model)
+    {
+        PreloadService.Show();
+        await ollamaService.DeletelModelAsync(model.Name);
+        PreloadService.Hide();
+    }
+}

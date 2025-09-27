@@ -1,0 +1,23 @@
+﻿@inherits LayoutComponentBase
+
+<div class="container">
+    <div class="app-container">
+        <SidebarLayout></SidebarLayout>
+        <div class="chat-container">
+            @Body
+        </div>
+    </div>
+</div>
+
+<Preload LoadingText="Loading..." />
+<Toasts class="p-3" AutoHide="true" Delay="4000" Placement="ToastsPlacement.TopRight" />
+
+@code {
+
+}
+
+<div id="blazor-error-ui">
+    An unhandled error has occurred.
+    <a href="" class="reload">Reload</a>
+    <a class="dismiss">🗙</a>
+</div>

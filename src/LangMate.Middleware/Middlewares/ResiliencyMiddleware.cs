@@ -17,7 +17,7 @@ namespace LangMate.Middleware.Middlewares
             .WaitAndRetryAsync(3, retryAttempt => TimeSpan.FromSeconds(1 * retryAttempt), (ex, time) => logger.LogWarning("Retrying request..."));
 
         private readonly AsyncTimeoutPolicy TimeoutPolicy = Policy
-            .TimeoutAsync(10); // 10 sec timeout
+            .TimeoutAsync(20);
 
         private readonly AsyncCircuitBreakerPolicy CircuitBreakerPolicy = Policy
             .Handle<Exception>()

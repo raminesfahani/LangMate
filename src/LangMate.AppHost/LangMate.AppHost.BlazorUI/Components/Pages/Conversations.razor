@@ -1,0 +1,73 @@
+﻿@page "/conversations"
+@using System.Globalization
+@using LangMate.Abstractions.Abstracts.Documents
+@using LangMate.Abstractions.Contracts
+@using LangMate.AppHost.BlazorUI.Services
+
+@using Microsoft.AspNetCore.WebUtilities
+@using Microsoft.Extensions.Primitives
+@using Ollama
+@inject OllamaService ollamaService
+@inject NavigationManager Navigation
+@inject ChatSidebarUpdateService ChatSidebarUpdateService
+@implements IDisposable
+
+<PageTitle>Conversations</PageTitle>
+
+<ConversationChat @ref="conversationChatRef" ConversationId="@selectedConversationId" OnConversationUpdated="@OnConversationUpdated" />
+
+@code {
+    private string? selectedConversationId;
+    private ConversationChat conversationChatRef;
+
+    protected override void OnInitialized()
+    {
+        Navigation.LocationChanged += OnLocationChanged;
+        LoadQueryParam();
+    }
+
+    private void LoadQueryParam()
+    {
+        var uri = Navigation.ToAbsoluteUri(Navigation.Uri);
+        var query = QueryHelpers.ParseQuery(uri.Query);
+        if (query.TryGetValue("conversationId", out var id))
+        {
+            selectedConversationId = id.ToString();
+        }
+        else
+        {
+            selectedConversationId = null;
+        }
+
+        OnConversationSelected(selectedConversationId);
+    }
+
+    private void OnLocationChanged(object? sender, Microsoft.AspNetCore.Components.Routing.LocationChangedEventArgs e)
+    {
+        LoadQueryParam();
+        StateHasChanged(); // Trigger re-render of ConversationChat with new param
+    }
+
+    private void NewConversation()
+    {
+        OnConversationSelected(null); 
+        Navigation.NavigateTo("conversations");
+    }
+
+    private void OnConversationSelected(string? conversationId)
+    {
+        selectedConversationId = conversationId;
+    }
+
+    private async Task OnConversationUpdated(string? conversationId)
+    {
+        selectedConversationId = conversationId;
+        OnConversationSelected(selectedConversationId);
+        await ChatSidebarUpdateService.RaiseChatListRefresh();
+    }
+
+    public void Dispose()
+    {
+        Navigation.LocationChanged -= OnLocationChanged;
+    }
+}

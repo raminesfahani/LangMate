@@ -1,0 +1,103 @@
+﻿@page "/"
+@using LangMate.AppHost.BlazorUI.Models
+
+@using System.Net.Http.Headers
+@inject IJSRuntime JS
+@inject NavigationManager Navigation
+@inject HttpClient Http
+@inject ToastService ToastService
+
+<PageTitle>Home</PageTitle>
+
+<div class="chat-container" style="overflow-y: scroll">
+    <div class="intro-message">
+        <div class="text-center mb-4">
+            <img src="/logo.png" style="max-width: 200px; width: 100%" />
+        </div>
+        <h2 class="text-primary">LangMate — Chat Smarter, Locally</h2>
+        <p class="lead">
+            LangMate is a modern AI assistant and developer SDK powered by Ollama and Blazor. Chat with local LLMs, manage conversations, and integrate advanced AI features into your own apps — all securely on your machine.
+        </p>
+        <NavLink class="btn btn-primary btn-block" href="/conversations">Let's Get Started</NavLink>
+    </div>
+    <section class="features">
+        <h2>✨ Key Features</h2>
+        <ul>
+            <li>
+                <h5><Icon Class="me-2" Name="IconName.ChatDots"></Icon> Local Chat with Ollama Models</h5> Use powerful open-source models like <code>llama3</code>, <code>mistral</code>, and <code>gemma</code> for intelligent conversations.
+            </li>
+            <li>
+                <h5><Icon Class="me-2" Name="IconName.Box"></Icon> Manage Ollama Models</h5> You can easily download official Ollama models, add them to your own local machine and totally manage them in a powerfull streaming manager in <code><NavLink class="badge bg-primary text-style-none" href="/ollama-models">Ollama Models</NavLink></code> page.
+            </li>
+            <li>
+                <h5><Icon Class="me-2" Name="IconName.Database"></Icon> Persistency & Caching via MongoDB</h5> Persist all your conversations and model responses efficiently using MongoDB for fast retrieval and durability. It is also flexible enough to swap out for other databases if needed.
+            </li>
+            <li>
+                <h5><Icon Class="me-2" Name="IconName.Code"></Icon> SDK for .NET</h5> <code>LangMate.Core</code> is a reusable SDK nuget package to integrate Ollama into any .NET project. Easily create, stream, and persist conversations from your backend or frontend apps. You can install SDK from <a href="https://www.nuget.org/packages/LangMate.Core/"><img src="https://img.shields.io/nuget/v/LangMate.Core?color=green" /></a>
+            </li>
+            <li>
+                <h5><Icon Class="me-2" Name="IconName.MenuApp"></Icon> Sample API Included</h5> <code>LangMate.Sample.WebAPI</code> project demonstrates how to expose your AI chat capabilities via using the SDK as RESTful endpoints — ideal for building full-stack or mobile integrations.
+            </li>
+            <li>
+                <h5><Icon Class="me-2" Name="IconName.InputCursorText"></Icon> Blazor ChatBot</h5> <code>LangMate.AppHost.BlazorUI</code> project is a clean, modern UI built on .NET Blazor project for fast, interactive, local-first experiences implementing dark and light themes to show the usage of SDK in your AI chat Blazor app.
+            </li>
+        </ul>
+    </section>
+</div>
+<style>
+    .hero {
+        text-align: center;
+        padding: 3rem 1rem;
+    }
+
+    .hero-title {
+        font-size: 2.5rem;
+        font-weight: bold;
+    }
+
+    .hero-subtitle {
+        font-size: 1.25rem;
+        color: #666;
+        max-width: 800px;
+        margin: 1rem auto 0;
+    }
+
+    .features {
+        display: flex;
+        flex-direction: column;
+        gap: 2rem;
+        padding: 2rem 1rem;
+        max-width: 900px;
+        margin: 0 auto;
+    }
+
+    .feature h2 {
+        font-size: 1.5rem;
+    }
+
+    /* .features strong {
+            color: var(--primary-color);
+        } */
+
+    .features ul {
+        list-style: none;
+    }
+
+        .features ul li {
+            margin-bottom: 1.5rem;
+        }
+
+    .tech-stack {
+        padding: 2rem 1rem;
+        background: #f9f9f9;
+    }
+
+        .tech-stack ul {
+            list-style-type: disc;
+            padding-left: 1.5rem;
+        }
+
+</style>
+
+@code {
+}

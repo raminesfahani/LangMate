@@ -15,10 +15,13 @@ namespace LangMate.Abstractions.Abstracts.Documents
         public ObjectId Id { get; set; } = ObjectId.GenerateNewId();
         public string ConversationId => Id.ToString();
 
+        public string Model { get; set; } = string.Empty;
+
         public string Title { get; set; } = string.Empty;
         
         public List<Message> Messages { get; set; } = [];
 
         public DateTime CreatedAt { get; init; } = DateTime.UtcNow;
+        public DateTime? UpdatedAt { get; set; }
     }
 }

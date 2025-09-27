@@ -7,6 +7,7 @@ using System.Linq.Expressions;
 using System.Threading.Tasks;
 using LangMate.Abstractions.Abstracts.Persistence;
 using LangMate.Abstractions.Abstracts.Settings;
+using Microsoft.Extensions.Configuration;
 
 namespace LangMate.Persistence.NoSQL.MongoDB.Repository
 {
@@ -15,9 +16,9 @@ namespace LangMate.Persistence.NoSQL.MongoDB.Repository
     {
         private readonly IMongoCollection<TDocument> _collection;
 
-        public MongoRepository(IMongoDbSettings settings)
+        public MongoRepository(IMongoDbSettings settings, IConfiguration configuration)
         {
-            var database = new MongoClient(settings.ConnectionString).GetDatabase(settings.DatabaseName);
+            var database = new MongoClient(configuration.GetConnectionString("mongo")).GetDatabase(settings.DatabaseName);
 
             try
             {

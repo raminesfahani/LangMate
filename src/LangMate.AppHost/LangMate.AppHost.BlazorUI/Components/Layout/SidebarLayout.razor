@@ -1,0 +1,191 @@
+﻿@using System.Globalization
+@using LangMate.Abstractions.Abstracts.Documents
+@using LangMate.Abstractions.Contracts
+@using LangMate.AppHost.BlazorUI.Services
+
+@using Microsoft.AspNetCore.WebUtilities
+@inject NavigationManager Navigation
+@inject IOllamaFactoryProvider OllamaFactoryProvider
+@inject PreloadService PreloadService
+@inject ToastService ToastService
+@inject IJSRuntime JSRuntime
+@inject ChatSidebarUpdateService ChatSidebarUpdateService
+@implements IDisposable
+
+<div class="sidebar">
+    <div class="logo">
+        <img src="logo.png" class="me-2" style="width: 45px;" />
+        <span>LangMate WebUI</span>
+    </div>
+    <NavLink href="/conversations" class="new-chat-btn" id="new-chat">
+        <i class="fas fa-plus"></i>
+        <span>New Chat</span>
+    </NavLink>
+    <div class="settings mt-0 border-0 pt-0">
+        <button @onclick="@(() => Navigation.NavigateTo("/", false))">
+            <Icon Name="IconName.House"></Icon>
+            <span>Home</span>
+        </button>
+        <button id="clear-history" @onclick="@(() => Navigation.NavigateTo("/ollama-models", false))">
+            <Icon Name="IconName.Box"></Icon>
+            <span>Ollama Models</span>
+        </button>
+
+        @if (conversations.Any())
+        {
+            <button @onclick="@(async () => await ClearHistory())">
+                <i class="fas fa-trash"></i>
+                <span>Clear History</span>
+            </button>
+        }
+    </div>
+
+    @if (conversations.Any())
+    {
+        <hr />
+        <div class="history-container">
+            <h3><Icon Name="IconName.ChatDots" Class="me-2"></Icon> Chat History</h3>
+            <div id="chat-history" style="flex: 1;overflow-y: auto;">
+                @foreach (var chat in conversations)
+                {
+                    <div class="chat-history-item @(chat.ConversationId == ConversationId ? "active" : "")" @onclick="@(async () => await GoToConversation(chat.ConversationId))">
+                        <div class="d-flex flex-column">
+                            <span>@chat.Title</span>
+                            <small class="text-secondary">@chat.UpdatedAt?.ToString("ddd, dd MMM yyyy hh:mm tt", CultureInfo.InvariantCulture)</small>
+                        </div>
+                        <Button class="chat-options-button" @onclick="@(async () => await DeleteConversation(chat.ConversationId))">
+                            <Icon Name="IconName.Trash" Color="IconColor.Danger"></Icon>
+                        </Button>
+                    </div>
+                }
+            </div>
+        </div>
+    }
+
+    <div class="settings">
+        <button id="toggle-theme" onclick="toggleTheme()">
+            <i class="fas fa-moon"></i>
+            <span>Dark Mode</span>
+        </button>
+    </div>
+</div>
+
+@code {
+    [Parameter] public EventCallback<string> OnConversationSelected { get; set; }
+    [Parameter] public EventCallback OnConversationUpdated { get; set; }
+    [Parameter] public string? ConversationId { get; set; }
+    [Parameter] public bool isOpen { get; set; }
+
+    private string search = "";
+    private List<ConversationDocument> conversations = [];
+
+    protected override async Task OnInitializedAsync()
+    {
+        ChatSidebarUpdateService.OnChatListRefresh += RefreshHistory;
+        await LoadList();
+    }
+
+    public async Task LoadList()
+    {
+        try
+        {
+            conversations = OllamaFactoryProvider.GetAllConversations(search).OrderByDescending(x => x.UpdatedAt).ToList();
+        }
+        catch (Exception ex)
+        {
+            ToastService.Notify(new(ToastType.Danger, $"Error: {ex.Message}."));
+        }
+        finally
+        {
+            PreloadService.Hide();
+        }
+
+        LoadQueryParam();
+
+        StateHasChanged();
+    }
+
+    public async Task RefreshHistory()
+    {
+        await LoadList();
+    }
+
+    private async Task SearchChanged(string? value)
+    {
+        search = value;
+        await LoadList();
+    }
+
+    private async Task GoToConversation(string id)
+    {
+        ConversationId = id;
+        Navigation.NavigateTo($"conversations?conversationId={id}", forceLoad: false);
+        await OnConversationSelected.InvokeAsync(id);
+    }
+
+    private void LoadQueryParam()
+    {
+        var uri = Navigation.ToAbsoluteUri(Navigation.Uri);
+        var query = QueryHelpers.ParseQuery(uri.Query);
+        if (query.TryGetValue("conversationId", out var id))
+        {
+            ConversationId = id.ToString();
+        }
+        else
+        {
+            ConversationId = null;
+        }
+    }
+
+    private async Task DeleteConversation(string id)
+    {
+        var confirmed = await JSRuntime.InvokeAsync<bool>("confirm", "Are you sure you want to delete this conversation?");
+        if (confirmed)
+        {
+            try
+            {
+                await OllamaFactoryProvider.DeleteConversationAsync(id);
+                ToastService.Notify(new(ToastType.Success, "Conversation deleted successfully."));
+                if (ConversationId == id)
+                {
+                    ConversationId = null;
+                    await OnConversationSelected.InvokeAsync(null);
+                    Navigation.NavigateTo("conversations", forceLoad: false);
+                }
+                await LoadList();
+            }
+            catch (Exception ex)
+            {
+                ToastService.Notify(new(ToastType.Danger, $"Error: {ex.Message}."));
+            }
+        }
+    }
+
+    public void Dispose()
+    {
+        ChatSidebarUpdateService.OnChatListRefresh -= RefreshHistory;
+    }
+
+    private async Task ClearHistory()
+    {
+        var confirmed = await JSRuntime.InvokeAsync<bool>("confirm", "Are you sure you want to clear the history? It will delete all your conversations!");
+        if (confirmed)
+        {
+            try
+            {
+                foreach (var item in conversations)
+                {
+                    await OllamaFactoryProvider.DeleteConversationAsync(item.ConversationId);
+                }
+
+                ToastService.Notify(new(ToastType.Success, "The chat history has been deleted successfully."));
+                await LoadList();
+                await InvokeAsync(StateHasChanged);
+            }
+            catch (Exception ex)
+            {
+                ToastService.Notify(new(ToastType.Danger, $"Error: {ex.Message}."));
+            }
+        }
+    }
+}

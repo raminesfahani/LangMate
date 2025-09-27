@@ -11,7 +11,7 @@ namespace LangMate.Abstractions.Contracts
         Task AddMessageToConversation(string conversationId, Message message);
         Task DeleteConversationAsync(string conversationId);
         Task<IAsyncEnumerable<GenerateChatCompletionResponse>> GenerateChatCompletionAsync(string conversationId, GenerateChatCompletionRequest request, CancellationToken ct = default);
-        IList<ConversationDocument> GetAllConversations();
+        IList<ConversationDocument> GetAllConversations(string search = "");
         Task<ModelsResponse> GetAvailableModelsAsync(CancellationToken ct = default);
         Task<ConversationDocument> GetConversationAsync(string conversationId);
         Task<List<OllamaModel>> GetModelsListAsync();

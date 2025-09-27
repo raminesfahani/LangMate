@@ -15,15 +15,11 @@ namespace LangMate.Extensions.Extensions.ByteArray
         public static string GetSha256(this byte[] value)
         {
 
-            StringBuilder Sb = new StringBuilder();
+            StringBuilder Sb = new();
+            byte[] result = SHA256.HashData(value);
 
-            using (SHA256 hash = SHA256.Create())
-            {
-                byte[] result = hash.ComputeHash(value);
-
-                foreach (byte b in result)
-                    Sb.Append(b.ToString("x2"));
-            }
+            foreach (byte b in result)
+                Sb.Append(b.ToString("x2"));
 
             return Sb.ToString();
         }

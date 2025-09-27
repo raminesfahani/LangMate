@@ -32,15 +32,13 @@ namespace LangMate.Core.Providers
         public async Task<(string conversationId, IAsyncEnumerable<GenerateChatCompletionResponse> response)>
             StartNewChatCompletionAsync(GenerateChatCompletionRequest request, CancellationToken ct = default)
         {
-            if (request.Messages == null || request.Messages.Any() == false)
-            {
-                throw new ArgumentException("The request must contain at least one message to start a new conversation.");
-            }
+            await CheckRequestModelValidation(request);
 
             var conversation = new ConversationDocument
             {
-                Title = TruncateMessage(request.Messages.FirstOrDefault(x => x.Role == MessageRole.User)?.Content ?? request.Messages[0].Content, 20),
-                Messages = [.. request.Messages]
+                Title = TruncateMessage(request.Messages.FirstOrDefault(x => x.Role == MessageRole.User)?.Content ?? request.Messages[0].Content, 40),
+                Messages = [.. request.Messages],
+                Model = request.Model,
             };
 
             await _conversationRepo.InsertOneAsync(conversation);
@@ -48,11 +46,28 @@ namespace LangMate.Core.Providers
             return (conversationId: conversation.Id.ToString(), _client.Chat.GenerateChatCompletionAsync(request, ct));
         }
 
+        private async Task CheckRequestModelValidation(GenerateChatCompletionRequest request)
+        {
+            if (request.Messages == null || request.Messages.Any() == false)
+            {
+                throw new ArgumentException("The request must contain at least one message to start a new conversation.");
+            }
+
+            var localModels = await GetModelsListAsync();
+            if (string.IsNullOrWhiteSpace(request.Model) || localModels.Any(x => x.Name == request.Model) == false)
+            {
+                throw new ArgumentException($"The model '{request.Model}' is not available. Please choose from the available models.");
+            }
+        }
+
         public async Task<IAsyncEnumerable<GenerateChatCompletionResponse>> GenerateChatCompletionAsync(string conversationId,
                                                                                       GenerateChatCompletionRequest request,
                                                                                       CancellationToken ct = default)
         {
+            await CheckRequestModelValidation(request);
+
             var conversation = await _conversationRepo.FindByIdAsync(conversationId) ?? throw new KeyNotFoundException($"Conversation with ID {conversationId} not found.");
+            conversation.UpdatedAt = DateTime.UtcNow;
             conversation.Messages.AddRange(request.Messages);
             await _conversationRepo.ReplaceOneAsync(conversation);
 
@@ -64,7 +79,9 @@ namespace LangMate.Core.Providers
         public async Task AddMessageToConversation(string conversationId, Message message)
         {
             var conversation = await _conversationRepo.FindByIdAsync(conversationId) ?? throw new KeyNotFoundException($"Conversation with ID {conversationId} not found.");
+
             conversation.Messages.Add(message);
+            conversation.UpdatedAt = DateTime.UtcNow;
             await _conversationRepo.ReplaceOneAsync(conversation);
         }
 
@@ -80,9 +97,9 @@ namespace LangMate.Core.Providers
             return conversation;
         }
 
-        public IList<ConversationDocument> GetAllConversations()
+        public IList<ConversationDocument> GetAllConversations(string search = "")
         {
-            return [.. _conversationRepo.FilterBy(x => x.Messages.Any()).OrderByDescending(x => x.CreatedAt)];
+            return [.. _conversationRepo.FilterBy(x => string.IsNullOrEmpty(search) || x.Title.Contains(search) || x.Messages.Contains(search)).OrderByDescending(x => x.UpdatedAt)];
         }
 
         public IAsyncEnumerable<PullModelResponse> PullModelAsync(string model, CancellationToken ct = default)
@@ -96,7 +113,7 @@ namespace LangMate.Core.Providers
 
         public async Task<List<OllamaModel>> GetModelsListAsync()
         {
-            List<OllamaModel>? models = GetOllamaModelsCache();
+            List<OllamaModel>? models = GetOllamaModelsCache(lifetime: TimeSpan.FromHours(2));
 
             if (models != null && models.Count != 0)
                 return models;
@@ -105,9 +122,9 @@ namespace LangMate.Core.Providers
             return models;
         }
 
-        private List<OllamaModel> GetOllamaModelsCache()
+        private List<OllamaModel> GetOllamaModelsCache(TimeSpan lifetime)
         {
-            return [.. _ollamaModelsRepo.FilterBy(x => x.CreatedAt.AddHours(2) >= DateTime.UtcNow)];
+            return [.. _ollamaModelsRepo.FilterBy(x => x.CreatedAt.Add(lifetime) >= DateTime.UtcNow)];
         }
 
         private async Task<List<OllamaModel>> UpdateOllamaModelsCacheAsync()
