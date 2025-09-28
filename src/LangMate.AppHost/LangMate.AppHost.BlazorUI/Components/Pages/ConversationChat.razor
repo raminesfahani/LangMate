@@ -509,13 +509,6 @@
                     await Task.Yield(); // let the browser render
                 }
 
-                if (string.IsNullOrWhiteSpace(responseStreamText) == false)
-                    await OllamaFactoryProvider.AddMessageToConversation(response.conversationId, new Message
-                    {
-                        Role = MessageRole.Assistant,
-                        Content = responseStreamText
-                    });
-
                 isStreaming = false;
 
                 conversation = await OllamaFactoryProvider.GetConversationAsync(ConversationId);
@@ -580,13 +573,6 @@
 
                     await Task.Yield(); // let the browser render
                 }
-
-                if (string.IsNullOrWhiteSpace(responseStreamText) == false)
-                    await OllamaFactoryProvider.AddMessageToConversation(ConversationId, new Message
-                    {
-                        Role = MessageRole.Assistant,
-                        Content = responseStreamText
-                    });
 
                 isStreaming = false;
 

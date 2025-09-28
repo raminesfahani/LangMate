@@ -4,6 +4,7 @@ using LangMate.Abstractions.Contracts;
 using LangMate.Abstractions.Options;
 using Microsoft.Extensions.Options;
 using Ollama;
+using System.IO;
 using System.Reflection;
 
 namespace LangMate.Core.Providers
@@ -30,7 +31,7 @@ namespace LangMate.Core.Providers
         }
 
         public async Task<(string conversationId, IAsyncEnumerable<GenerateChatCompletionResponse> response)>
-            StartNewChatCompletionAsync(GenerateChatCompletionRequest request, CancellationToken ct = default)
+    StartNewChatCompletionAsync(GenerateChatCompletionRequest request, CancellationToken ct = default)
         {
             await CheckRequestModelValidation(request);
 
@@ -43,7 +44,35 @@ namespace LangMate.Core.Providers
 
             await _conversationRepo.InsertOneAsync(conversation);
 
-            return (conversationId: conversation.Id.ToString(), _client.Chat.GenerateChatCompletionAsync(request, ct));
+            var stream = _client.Chat.GenerateChatCompletionAsync(request, ct);
+
+            // Wrap the stream to detect completion
+            var response = "";
+            async IAsyncEnumerable<GenerateChatCompletionResponse> WrappedStream(IAsyncEnumerable<GenerateChatCompletionResponse> originalStream)
+            {
+                await foreach (var item in originalStream.WithCancellation(ct))
+                {
+                    response += item?.Message.Content;
+                    if (item == null) continue;
+
+                    yield return item;
+                }
+
+                // This runs after the iteration is finished
+                await OnStreamCompletedAsync(conversation.ConversationId, response);
+            }
+
+            return (conversation.Id.ToString(), WrappedStream(stream));
+        }
+
+        // Example callback
+        private async Task OnStreamCompletedAsync(string conversationId, string content)
+        {
+            await AddMessageToConversation(conversationId, new Message()
+            {
+                Role = MessageRole.Assistant,
+                Content = content
+            });
         }
 
         private async Task CheckRequestModelValidation(GenerateChatCompletionRequest request)
@@ -72,8 +101,25 @@ namespace LangMate.Core.Providers
             await _conversationRepo.ReplaceOneAsync(conversation);
 
             request.Messages = conversation.Messages;
+            var stream = _client.Chat.GenerateChatCompletionAsync(request, ct);
 
-            return _client.Chat.GenerateChatCompletionAsync(request, ct);
+            // Wrap the stream to detect completion
+            var response = "";
+            async IAsyncEnumerable<GenerateChatCompletionResponse> WrappedStream(IAsyncEnumerable<GenerateChatCompletionResponse> originalStream)
+            {
+                await foreach (var item in originalStream.WithCancellation(ct))
+                {
+                    response += item?.Message.Content;
+                    if (item == null) continue;
+
+                    yield return item;
+                }
+
+                // This runs after the iteration is finished
+                await OnStreamCompletedAsync(conversation.ConversationId, response);
+            }
+
+            return WrappedStream(stream);
         }
 
         public async Task AddMessageToConversation(string conversationId, Message message)

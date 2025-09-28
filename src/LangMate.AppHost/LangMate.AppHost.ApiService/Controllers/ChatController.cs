@@ -31,23 +31,14 @@ namespace LangMate.AppHost.ApiService.Controllers
         }
 
         [HttpPost("conversations")]
-        public async Task<IActionResult> StreamChatAsync([FromBody] GenerateChatCompletionRequest model, CancellationToken cancellationToken)
+        public async Task<IActionResult> StartNewChatCompletionAsync([FromBody] GenerateChatCompletionRequest model, CancellationToken cancellationToken)
         {
             var response = "";
             var results = await _ollamaFactoryProvider.StartNewChatCompletionAsync(model, cancellationToken);
             await foreach (var item in results.response)
             {
-                Console.Write(item?.Message.Content);
                 response += item?.Message.Content;
             }
-
-            await _ollamaFactoryProvider.AddMessageToConversation(results.conversationId, new Message
-            {
-                Role = MessageRole.Assistant,
-                Content = response
-            });
-
-            Console.WriteLine();
 
             return Ok(new
             {
@@ -57,23 +48,14 @@ namespace LangMate.AppHost.ApiService.Controllers
         }
 
         [HttpPut("conversations/{conversationId}")]
-        public async Task<IActionResult> StreamChatAsync([FromRoute][Required] string conversationId, [FromBody] GenerateChatCompletionRequest model, CancellationToken cancellationToken)
+        public async Task<IActionResult> GenerateChatCompletionAsync([FromRoute][Required] string conversationId, [FromBody] GenerateChatCompletionRequest model, CancellationToken cancellationToken)
         {
             var response = "";
             var results = await _ollamaFactoryProvider.GenerateChatCompletionAsync(conversationId, model, cancellationToken);
             await foreach (var item in results)
             {
-                Console.Write(item?.Message.Content);
                 response += item?.Message.Content;
             }
-
-            await _ollamaFactoryProvider.AddMessageToConversation(conversationId, new Message
-            {
-                Role = MessageRole.Assistant,
-                Content = response
-            });
-
-            Console.WriteLine();
 
             return Ok(new
             {
@@ -83,7 +65,7 @@ namespace LangMate.AppHost.ApiService.Controllers
         }
 
         [HttpDelete("conversations/{id}")]
-        public async Task<IActionResult> StreamChatAsync([FromRoute][Required] string id, CancellationToken cancellationToken)
+        public async Task<IActionResult> DeleteConversationAsync([FromRoute][Required] string id, CancellationToken cancellationToken)
         {
             await _ollamaFactoryProvider.DeleteConversationAsync(id);
             return Ok();
