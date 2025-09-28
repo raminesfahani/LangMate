@@ -28,7 +28,14 @@
             @foreach (var item in models.Where(x => x.IsPulling))
             {
                 <Alert Class="my-2" Color="AlertColor.Warning">
-                    <p class="small">Pulling model <b class="text-primary">@(item.Name)</b>: <label>@($"Downloaded {item.Completed:F1}/{item.TotalSize:F1} MB ({item.PullingPercentage:P1})")</label></p>
+                    <p class="small">
+                        Pulling model <b class="text-primary">@(item.Name)</b>: <label>@($"Downloaded {item.Completed:F1}/{item.TotalSize:F1} MB ({item.PullingPercentage:P1})")</label>
+
+                        <Button Size="ButtonSize.ExtraSmall" Color="ButtonColor.Danger" class="float-end" @onclick="@(() => CancelDownload(item))">
+                            <Icon Name="IconName.StopFill" Class="mx-1"></Icon>
+                            Cancel
+                        </Button>
+                    </p>
                     <Progress Class="mt-3">
                         <ProgressBar Type="ProgressType.StripedAndAnimated" Width="100" Color="ProgressColor.Primary" Label="@($"{item.PullingPercentage:P1}")" />
                     </Progress>
@@ -111,7 +118,7 @@
 @code {
     [Inject] protected PreloadService PreloadService { get; set; }
     [Inject] protected ToastService ToastService { get; set; }
-    [Inject] protected NavigationManager Navigation{ get; set; }
+    [Inject] protected NavigationManager Navigation { get; set; }
     List<OllamaExtendedModel> models = [];
     List<Model> localModels = [];
     string notification = "";

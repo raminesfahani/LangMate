@@ -7,25 +7,57 @@ using Polly.Timeout;
 
 namespace LangMate.Middleware.Middlewares
 {
-    public class ResiliencyMiddleware(RequestDelegate next, ILogger<ResiliencyMiddleware> logger)
+    public class ResiliencyMiddleware
     {
-        private readonly RequestDelegate _next = next;
-        private readonly ILogger<ResiliencyMiddleware> _logger = logger;
+        private readonly RequestDelegate _next;
+        private readonly ILogger<ResiliencyMiddleware> _logger;
 
-        private readonly AsyncRetryPolicy RetryPolicy = Policy
-            .Handle<Exception>()
-            .WaitAndRetryAsync(3, retryAttempt => TimeSpan.FromSeconds(1 * retryAttempt), (ex, time) => logger.LogWarning("Retrying request..."));
+        private readonly AsyncRetryPolicy _retryPolicy;
+        private readonly AsyncTimeoutPolicy _timeoutPolicy;
+        private readonly AsyncCircuitBreakerPolicy _circuitBreakerPolicy;
 
-        private readonly AsyncTimeoutPolicy TimeoutPolicy = Policy
-            .TimeoutAsync(20);
+        public ResiliencyMiddleware(RequestDelegate next, ILogger<ResiliencyMiddleware> logger)
+        {
+            _next = next;
+            _logger = logger;
 
-        private readonly AsyncCircuitBreakerPolicy CircuitBreakerPolicy = Policy
-            .Handle<Exception>()
-            .CircuitBreakerAsync(5, TimeSpan.FromSeconds(30)); // after 5 failures, wait 30s
+            _retryPolicy = Policy
+                .Handle<Exception>()
+                .WaitAndRetryAsync(
+                    3,
+                    attempt => TimeSpan.FromSeconds(attempt),
+                    (exception, timeSpan, retryCount, context) =>
+                    {
+                        _logger.LogWarning(exception, "Retry {RetryCount} after {Delay}", retryCount, timeSpan);
+                    });
+
+            _timeoutPolicy = Policy
+                .TimeoutAsync(20);
+
+            _circuitBreakerPolicy = Policy
+                .Handle<Exception>()
+                .CircuitBreakerAsync(
+                    5,
+                    TimeSpan.FromSeconds(30),
+                    onBreak: (ex, ts) =>
+                        _logger.LogWarning("Circuit broken: {Message}", ex.Message),
+                    onReset: () =>
+                        _logger.LogInformation("Circuit closed again."),
+                    onHalfOpen: () =>
+                        _logger.LogInformation("Circuit in half-open state.")
+                );
+        }
 
         public async Task Invoke(HttpContext context)
         {
-            var policyWrap = Policy.WrapAsync(RetryPolicy, TimeoutPolicy, CircuitBreakerPolicy);
+            // ❗ Skip WebSocket or Blazor server (SignalR) traffic
+            if (context.WebSockets.IsWebSocketRequest || context.Request.Path.StartsWithSegments("/_blazor"))
+            {
+                await _next(context);
+                return;
+            }
+
+            var policyWrap = Policy.WrapAsync(_retryPolicy, _timeoutPolicy, _circuitBreakerPolicy);
 
             try
             {
@@ -33,9 +65,20 @@ namespace LangMate.Middleware.Middlewares
             }
             catch (BrokenCircuitException ex)
             {
-                _logger.LogWarning("Circuit is open. Rejecting request: {Message}", ex.Message);
+                _logger.LogWarning("Circuit is open. Request rejected: {Message}", ex.Message);
                 context.Response.StatusCode = StatusCodes.Status503ServiceUnavailable;
-                await context.Response.WriteAsync("Service is temporarily unavailable. Please try again later.");
+                await context.Response.WriteAsync("Service temporarily unavailable. Please try again.");
+            }
+            catch (TimeoutRejectedException ex)
+            {
+                _logger.LogWarning("Request timed out: {Message}", ex.Message);
+                context.Response.StatusCode = StatusCodes.Status504GatewayTimeout;
+                await context.Response.WriteAsync("Request timed out. Please try again.");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Unhandled exception in ResiliencyMiddleware");
+                throw; // Let other middleware (e.g. error handler) catch it
             }
         }
     }

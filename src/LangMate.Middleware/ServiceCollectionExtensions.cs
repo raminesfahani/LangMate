@@ -28,7 +28,7 @@ namespace LangMate.Middleware
             app.UseLogging(configuration, loggerFactory);
             app.UseLangMateRequestLogging();     // logs all incoming requests
             app.UseLangMateExceptionHandler();   // catch and serialize any errors
-            //app.UseLangMateResiliency();         // retry, timeout, circuit breaker
+            app.UseLangMateResiliency();         // retry, timeout, circuit breaker
 
             return app;
         }
