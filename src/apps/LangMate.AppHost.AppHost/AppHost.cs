@@ -4,15 +4,13 @@
 var username = builder.AddParameter("mongo-username");
 var password = builder.AddParameter("mongo-password");
 var mongo = builder.AddMongoDB("mongo", 27017)
-                    .WithDataVolume() // Adds a data volume to store models
-                    .WithDbGate();  // Mongo web UI
-                                    //.WithLifetime(ContainerLifetime.Persistent);     // keep container alive
+                    .WithDataVolume()
+                    .WithDbGate();
 
 var ollama = builder.AddOllama("ollama", 11434)
                     .WithImageTag("latest")
-                    .WithDataVolume() // Adds a data volume to store models
-                    .WithGPUSupport(); // Enable GPU support
-                                       //.WithLifetime(ContainerLifetime.Persistent); // Keep the container running
+                    .WithDataVolume()
+                    .WithGPUSupport();
 
 var api = builder.AddProject<Projects.LangMate_AppHost_ApiService>("langmate-api")
                 .WithHttpHealthCheck("/health")
@@ -25,8 +23,6 @@ var api = builder.AddProject<Projects.LangMate_AppHost_ApiService>("langmate-api
 builder.AddProject<Projects.LangMate_AppHost_BlazorUI>("langmate-ui")
         .WithExternalHttpEndpoints()
         .WithHttpHealthCheck("/health")
-        //.WithReference(api)
-        //.WaitFor(api)
         .WithReference(mongo)
         .WaitFor(mongo)
         .WithReference(ollama)
