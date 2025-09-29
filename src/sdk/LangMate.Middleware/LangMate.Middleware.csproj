@@ -19,7 +19,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\LangMate.Abstractions\LangMate.Abstractions.csproj" />
-    <ProjectReference Include="..\LangMate.Cache\LangMate.Persistence.csproj" />
+    <ProjectReference Include="..\LangMate.Persistence\LangMate.Persistence.csproj" />
   </ItemGroup>
 
 </Project>

@@ -1,149 +1,98 @@
 # LangMate
 
-[![Build & Publish NuGet Packages](https://github.com/raminesfahani/LangMate/actions/workflows/nuget-packages.yml/badge.svg)](https://github.com/raminesfahani/LangMate/actions/workflows/nuget-packages.yml)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-[![Language](https://img.shields.io/github/languages/top/raminesfahani/LangMate)](https://github.com/raminesfahani/LangMate/search?l=c%23)
-![GitHub Repo stars](https://img.shields.io/github/stars/raminesfahani/LangMate?style=social)
-
-**LangMate** is a modular .NET SDK designed to simplify working with AI and large language models (LLMs) across multiple providers and languages.
-
-![LangMate Logo](https://github.com/raminesfahani/LangMate/raw/main/logo.png)
+**LangMate** — a modern local-first AI assistant and developer SDK powered by **Ollama** and **Blazor**.  
+Chat with local LLMs, manage conversations, and integrate advanced AI features into your own .NET apps — all securely on your machine.
 
 ---
 
-## 📖 About the Project
+## Key features
 
-Multilingual, multi-provider AI SDK for .NET — unified interface for LLMs and language models.
-
-Key features:
-
-Multi-Provider Support: OpenAI, HuggingFace, Azure OpenAI, and local/offline LLMs.
-
-Multilingual: Easily generate or translate text in multiple languages with unified prompts.
-
-Unified Interface: One interface (IAIClient) for all AI providers.
-
-Streaming Support: Stream responses in real time.
-
-Middleware & Caching: Built-in support for logging, moderation, and caching.
-
-Extensible & Modular: Add new AI providers or custom middleware easily.
+- Local LLM support via **Ollama** (run models locally for privacy and latency).
+- Blazor-based UI for fast, cross-platform frontends.
+- Conversation management, caching and persistence primitives.
+- Extensible SDK (Abstractions, Extensions, Middleware) for building custom assistant experiences.
+- Test projects demonstrating unit and integration tests.
+- Designed for offline-first and self-hosted workflows.
 
 ---
 
-## 🧱 Architecture Overview
+## Quickstart
 
-Each module targets a specific infrastructure concern:
+### Requirements
+- .NET SDK 8.0 or later installed.
+- [Ollama](https://ollama.com) or compatible local LLM runtime available and running (models pulled locally).
+- A modern browser for the Blazor UI.
 
-| Module | Purpose | NuGet Package | Documentation |
-|--------|---------|---------------|---------------|
-| **Abstractions** | Core contracts and DI service definitions | [![Abstractions](https://img.shields.io/nuget/v/Netrilo.Infrastructure.Common.Abstractions?color=green)](https://www.nuget.org/packages/Netrilo.Infrastructure.Common.Abstractions) | [![Full Documentation](https://img.shields.io/badge/Full%20Documentation-orange)](Src/Netrilo.Infrastructure.Common.Abstractions) |
-| **Bus**         | Event bus & messaging pattern implementation | [![Bus](https://img.shields.io/nuget/v/Netrilo.Infrastructure.Common.Bus?color=green)](https://www.nuget.org/packages/Netrilo.Infrastructure.Common.Bus) | [![Full Documentation](https://img.shields.io/badge/Full%20Documentation-orange)](Src/Netrilo.Infrastructure.Common.Bus) |
-| **Extensions**  | Common helper utilities and extension methods | [![Extensions](https://img.shields.io/nuget/v/Netrilo.Infrastructure.Common.Extensions?color=green)](https://www.nuget.org/packages/Netrilo.Infrastructure.Common.Extensions) | [![Full Documentation](https://img.shields.io/badge/Full%20Documentation-orange)](Src/Netrilo.Infrastructure.Common.Extensions) |
-| **Logging**     | Structured logging setup using Serilog | [![Logging](https://img.shields.io/nuget/v/Netrilo.Infrastructure.Common.Logging?color=green)](https://www.nuget.org/packages/Netrilo.Infrastructure.Common.Logging) | [![Full Documentation](https://img.shields.io/badge/Full%20Documentation-orange)](Src/Netrilo.Infrastructure.Common.Logging) |
-| **Persistence** | EF Core integration, repository pattern, migrations supporting SQL and NoSQL databases.| [![Persistence](https://img.shields.io/nuget/v/Netrilo.Infrastructure.Common.Persistence?color=green)](https://www.nuget.org/packages/Netrilo.Infrastructure.Common.Persistence) | [![Full Documentation](https://img.shields.io/badge/Full%20Documentation-orange)](Src/Netrilo.Infrastructure.Common.Persistence) |
-| **Web**         | Implementing API explorers and filters, Validation and Exception handling, and Service Discovery| [![Web](https://img.shields.io/nuget/v/Netrilo.Infrastructure.Common.Web?color=green)](https://www.nuget.org/packages/Netrilo.Infrastructure.Common.Web) | [![Full Documentation](https://img.shields.io/badge/Full%20Documentation-orange)](Src/Netrilo.Infrastructure.Common.Web) |
-
-
-These modules can be installed independently and used in isolation or together. You can read the full installation and usage guideline for each project package in the above documentation links.
-
----
-
-## 🚀 Installation
-
-You can install any package using the NuGet CLI or .NET CLI and you can choose one from the above list and install from the NuGet website or Package Manager. Here is the command you can use to install manually via `.NET CLI`:
-
+### Run locally (example)
+1. Start your Ollama server and ensure a model is installed and accessible (see Ollama docs).
+2. From the repo root:
 ```bash
-dotnet add package Netrilo.Infrastructure.Common.Abstractions
-dotnet add package Netrilo.Infrastructure.Common.Bus
-dotnet add package Netrilo.Infrastructure.Common.Extensions
-dotnet add package Netrilo.Infrastructure.Common.Logging
-dotnet add package Netrilo.Infrastructure.Common.Persistence
-dotnet add package Netrilo.Infrastructure.Common.Web
+# Build solution
+dotnet build
+
+# Run AppHost (Blazor UI + API)
+cd src/LangMate.AppHost/LangMate.AppHost.AppHost
+dotnet run
+
+# In another terminal you can run API service or tests as needed:
+cd ../../LangMate.AppHost.ApiService
+dotnet run
 ```
 
----
-
-## Azure Artifact Deployment
-
-You can easily configure and customize this [YAML Pipeline](Deployment/Azure-Pipeline.yml) for deploying on `Azure Artifact` by setting your environment variables and repo supporting `package versioning`.
+3. Open the Blazor UI at the URL reported by `dotnet run` (usually https://localhost:5001).
 
 ---
 
-## 🛠️ Build Instructions
+## Project structure & short descriptions
 
-To build all projects and generate NuGet packages:
+This repository is organized into several projects. Briefly:
 
-```bash
-dotnet restore
-dotnet build --configuration Release
-```
+- **src/LangMate.Abstractions** — (project folder)
+- **src/LangMate.AppHost/LangMate.AppHost.ApiService** — (project folder)
+- **src/LangMate.AppHost/LangMate.AppHost.AppHost** — (project folder)
+- **src/LangMate.AppHost/LangMate.AppHost.BlazorUI** — (project folder)
+- **src/LangMate.AppHost/LangMate.AppHost.ServiceDefaults** — (project folder)
+- **src/LangMate.AppHost/LangMate.AppHost.Tests** — (project folder)
+- **src/LangMate.Cache** — (project folder)
+- **src/LangMate.Core** — (project folder)
+- **src/LangMate.Extensions** — (project folder)
+- **src/LangMate.Middleware** — (project folder)
+- **tests/LangMate.Cache.Tests** — (project folder)
+- **tests/LangMate.Core.Tests** — (project folder)
+- **tests/LangMate.Middleware.Tests** — (project folder)
 
----
-
-## 🧪 Unit Tests
-
-All unit tests for the repository are located under the `Tests/` folder.
-
-### Run all tests
-
-Use the following `dotnet` command to discover and run all tests in the repository:
-
-```bash
-dotnet test --configuration Release
-```
-
-## 🗂️ Repository Structure
-
-```
-Main Projects/
-├── Netrilo.Infrastructure.Common.Abstractions/
-├── Netrilo.Infrastructure.Common.Bus/
-├── Netrilo.Infrastructure.Common.Extensions/
-├── Netrilo.Infrastructure.Common.Logging/
-├── Netrilo.Infrastructure.Common.Persistence/
-├── Netrilo.Infrastructure.Common.Web/
-
-Test Projects/
-├── Netrilo.Infrastructure.Common.Abstractions.UnitTests/
-├── Netrilo.Infrastructure.Common.Bus.UnitTests/
-├── Netrilo.Infrastructure.Common.Extensions.UnitTests/
-
-.github/
-└── workflows/
-    └── nuget-packages.yml     → CI/CD pipeline
-
-Deployment/
-└── Azure Artifacts/
-    └── Azure-Pipeline.yml     → CI/CD pipeline
-
-artifacts/              → Generated NuGet packages
-```
-
-Each main project has its own README and is published as a standalone NuGet package.
+**Highlights**
+- `src/LangMate.Abstractions` — Shared interfaces and DTOs used across the SDK.
+- `src/LangMate.Core` — Core runtime, conversation handling, model adapters and orchestration.
+- `src/LangMate.Cache` — Persistence and caching layers (local disk, optional DB adapters).
+- `src/LangMate.Extensions` — Optional extensions and helper utilities for integrating 3rd-party tools.
+- `src/LangMate.Middleware` — Request/response middleware for augmenting prompts, logging, and safety checks.
+- `src/LangMate.AppHost/*` — Blazor UI, API service, host configurations and defaults.
+- `tests/*` — Unit and integration tests for core modules and middleware.
 
 ---
 
-## 🤝 Contribution Guide
+## Configuration & environment
 
-We welcome contributions to improve and extend the SDK.  
-To contribute:
+- Environment variables used by the projects (examples):
+  - `OLLAMA_URL` — URL to the local Ollama API (e.g. `http://localhost:11434`).
+  - `LANGMATE__DB_PATH` — Path to local persistence files.
+  - Standard ASP.NET Core environment variables (ASPNETCORE_ENVIRONMENT, etc.)
 
-1. Fork the repo and create your feature branch.
-2. Commit your changes and push.
-3. Open a pull request.
-
-Please make sure that your changes follow the coding standards and are thoroughly tested.
+Check project `appsettings.json` files under `src/LangMate.AppHost/*` for concrete configuration keys.
 
 ---
 
-## 🔒 License
+## Contributing
 
-This project is licensed under the [MIT License](LICENSE).
+See `CONTRIBUTING.md` for guidelines on development, testing, style and PR process.
 
 ---
 
-## 📬 Contact
+## License
 
-Maintained by [@raminesfahani](https://github.com/raminesfahani).  
-For feature requests or bug reports, please [open an issue](https://github.com/raminesfahani/LangMate/issues).
+Include project license here if present (add `LICENSE` file at repo root if missing).
+
+---
+
+_Last updated: 2025-09-29 16:59 UTC_

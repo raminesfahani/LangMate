@@ -19,8 +19,9 @@
     <PackageReference Include="xunit.v3" Version="2.0.0" />
   </ItemGroup>
 
+
   <ItemGroup>
-    <ProjectReference Include="..\LangMate.AppHost.AppHost\LangMate.AppHost.AppHost.csproj" />
+    <ProjectReference Include="..\..\src\apps\LangMate.AppHost.AppHost\LangMate.AppHost.AppHost.csproj" />
   </ItemGroup>
 
   <ItemGroup>

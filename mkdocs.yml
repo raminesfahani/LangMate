@@ -1,0 +1,25 @@
+site_name: LangMate
+site_description: Local-first AI assistant & developer SDK powered by Ollama and Blazor
+site_author: LangMate Contributors
+repo_url: https://github.com/your-org/langmate
+
+theme:
+  name: material
+  features:
+    - navigation.expand
+    - navigation.sections
+    - search.highlight
+    - search.suggest
+  palette:
+    - scheme: default
+      primary: indigo
+      accent: pink
+
+nav:
+  - Home: docs/index.md
+  - Getting Started: docs/getting-started.md
+  - Configuration: docs/configuration.md
+  - Projects Overview: docs/projects-overview.md
+  - Contributing: CONTRIBUTING.md
+  - Security: SECURITY.md
+  - Support: SUPPORT.md
