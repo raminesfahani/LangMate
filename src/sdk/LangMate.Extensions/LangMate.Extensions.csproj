@@ -20,6 +20,6 @@
 		<PackageReference Include="System.Drawing.Common" Version="6.0.0" />
 		<PackageReference Include="xunit.abstractions" Version="2.0.3" />
 		<None Include="README.md" Pack="true" PackagePath="" />
-		<None Include="logo.png" />
+		<None Include="logo.png" Pack="true" PackagePath="" />
 	</ItemGroup>
 </Project>
