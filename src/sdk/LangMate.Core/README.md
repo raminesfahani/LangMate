@@ -46,6 +46,100 @@ var loggerFactory = app.Services.GetRequiredService<ILoggerFactory>();
 app.UseLangMateCore(app.Configuration, loggerFactory);
 ```
 
+## 🔧 LangMate SDK Sample Usage
+
+Here is an example of using LangMate.Core SDK in a WebAPI controller.
+You can find the all methods from **IOllamaFactory** interface as well.
+
+```csharp
+    [ApiController]
+    [Route("[controller]")]
+    public class OllamaController(IOllamaFactory ollamaFactoryProvider) : ControllerBase
+    {
+        private readonly IOllamaFactory _ollamaFactoryProvider = ollamaFactoryProvider;
+
+        [HttpGet("models")]
+        public async Task<IActionResult> GetModelListAsync(string term = "")
+        {
+            var models = await _ollamaFactoryProvider.GetModelsListAsync();
+
+            return Ok(models.Where(x => x.Name.Contains(term) || x.Description.Contains(term)));
+        }
+
+        [HttpGet("models/installed")]
+        public async Task<IActionResult> GetLocalModels()
+        {
+            var models = await _ollamaFactoryProvider.GetAvailableModelsAsync();
+            return Ok(models);
+        }
+
+        [HttpPut("models/pull/{model}")]
+        public async Task<IActionResult> PullModelAsync([Required] string model, CancellationToken cancellationToken)
+        {
+            var response = _ollamaFactoryProvider.PullModelAsync(model, cancellationToken);
+            PullModelResponse? first = null;
+            
+            await foreach (var progress in response)
+            {
+                first ??= progress;
+
+                if (first == null || progress.Completed == null || progress.Total == null)
+                    continue;
+
+                double completedMB = progress.Completed.Value / 1_000_000.0;
+                double totalMB = progress.Total.Value / 1_000_000.0;
+                double percent = Math.Min(progress.Completed.Value / (double)progress.Total.Value, 1.0);
+
+                Console.WriteLine($"Downloaded {completedMB:F1}/{totalMB:F1} MB ({percent:P1})");
+            }
+
+            await response.EnsureSuccessAsync();
+
+            return Ok(new
+            {
+                message = $"Downloaded: {first?.Total / 1000000} MB",
+                total = $"{first?.Total / 1000000} MB",
+            });
+        }
+
+        [HttpGet("conversations")]
+        public IActionResult GetConversations()
+        {
+            var models = _ollamaFactoryProvider.GetAllConversations();
+            return Ok(models);
+        }
+
+        [HttpGet("conversations/{id}")]
+        public async Task<IActionResult> GetConversationAsync([Required] string id)
+        {
+            var models = await _ollamaFactoryProvider.GetConversationAsync(id);
+            return Ok(models);
+        }
+
+        [HttpPost("conversations")]
+        public async Task<IActionResult> StartNewChatCompletionAsync([FromBody] GenerateChatCompletionRequest model, CancellationToken cancellationToken)
+        {
+            var response = "";
+            var results = await _ollamaFactoryProvider.StartNewChatCompletionAsync(model, cancellationToken);
+            await foreach (var item in results.response)
+            {
+                response += item?.Message.Content;
+            }
+
+            return Ok(new
+            {
+                message = response,
+                results.conversationId
+            });
+        }
+    }
+```
+
+Here is a demo project which contains WebAPI and BlazorUI ChatBot applications working with .NET Aspire and docker.
+You can follow the usage of LangMate.Core SDK in both of them based on your requirements. Click the following link to view the GitHub demo and SDK project:
+
+[![Demo Project](https://img.shields.io/badge/Demo%20Project-green)](https://github.com/raminesfahani/LangMate)
+
 ## ⚙️ Example `appsettings.json`
 
 ```json

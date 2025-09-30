@@ -1,98 +1,184 @@
 # LangMate
 
-**LangMate** — a modern local-first AI assistant and developer SDK powered by **Ollama** and **Blazor**.  
-Chat with local LLMs, manage conversations, and integrate advanced AI features into your own .NET apps — all securely on your machine.
+[![Build & Publish NuGet Packages](https://github.com/raminesfahani/LangMate/actions/workflows/nuget-packages.yml/badge.svg)](https://github.com/raminesfahani/LangMate/actions/workflows/nuget-packages.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![Language](https://img.shields.io/github/languages/top/raminesfahani/LangMate)](https://github.com/raminesfahani/LangMate/search?l=c%23)
+![GitHub Repo stars](https://img.shields.io/github/stars/raminesfahani/LangMate?style=social)
+
+**LangMate** is a modular and extensible AI chat application and SDK platform built with .NET 9 and fully compatible with .NET Aspire.  
+It provides a Blazor-powered Web UI, Ollama model integrations, persistent chat history via MongoDB, and a flexible SDK for .NET developers to integrate and use local LLMs (like Gemma, LLaMA2, Mistral) easily and securely.
+
+![LangMate Logo](https://github.com/raminesfahani/LangMate/raw/main/logo.png)
+---
+
+## 🌟 Key Features
+
+- ⚙️ **Fully compatible with .NET Aspire**
+- 💬 **Chat UI** 
+    - built with Blazor Server (interactive, reactive experience)
+- 🧠 **Ollama Integration** 
+  - LLM-based completion and conversation
+- 🗃 **MongoDB Chat History and caching** 
+  - for persistent and fast retrieval
+- 🔧 **LangMate.Core SDK** 
+  - use Ollama easily in your own .NET apps
+- 🧩 **Pluggable Middleware** 
+  - Polly-powered **Resiliency**, Circuit Breakers, and Retry logic
+- 🚀 **File Upload Support** 
+  - with base64 image preview support (for image input models)
+- 🌐 **API Endpoints** 
+  - Implemented a backend-driven project for using in every client app
+- 🧰 **Developer-Friendly** architecture — clean, testable and maintainable
 
 ---
 
-## Key features
+## 🧠 Architecture
 
-- Local LLM support via **Ollama** (run models locally for privacy and latency).
-- Blazor-based UI for fast, cross-platform frontends.
-- Conversation management, caching and persistence primitives.
-- Extensible SDK (Abstractions, Extensions, Middleware) for building custom assistant experiences.
-- Test projects demonstrating unit and integration tests.
-- Designed for offline-first and self-hosted workflows.
+```
+LangMate/
+├── Apps/
+├──── LangMate.AppHost.AppHost        → .NET Aspire for orchestrating and deploying the apps on Docker, Kubernetes, or any other cloud platform.
+├──── LangMate.AppHost.BlazorUI        → Blazor ChatBot UI sample project using LangMate SDK
+├──── LangMate.AppHost.ApiService        → Web API sample project using LangMate SDK
+├── SDK/
+├──── LangMate.Core               → Reusable .NET SDK to interact with Ollama
+├──── LangMate.Middleware         → Polly-based Resiliency Middleware (retry, timeout, circuit breaker)
+├──── LangMate.Extensions         → Utilities, helpers and extension methods
+├──── LangMate.Persistence        → MongoDB chat history, caching layer, repositories and configuration
+```
 
 ---
 
-## Quickstart
+## 📦 Installation
 
-### Requirements
-- .NET SDK 8.0 or later installed.
-- [Ollama](https://ollama.com) or compatible local LLM runtime available and running (models pulled locally).
-- A modern browser for the Blazor UI.
+### Prerequisites
+- [.NET 9 SDK](https://dotnet.microsoft.com/en-us/download/dotnet/9.0)
+- [Ollama](https://ollama.com/) installed and running locally (for model inference)
+- [MongoDB](https://www.mongodb.com/) (locally or cloud instance)
 
-### Run locally (example)
-1. Start your Ollama server and ensure a model is installed and accessible (see Ollama docs).
-2. From the repo root:
+### Run the App
+
 ```bash
-# Build solution
+git clone https://github.com/raminesfahani/LangMate.git
+cd LangMate/src/apps/LangMate.AppHost.AppHost
+
+# Restore dependencies and build
+dotnet restore
 dotnet build
 
-# Run AppHost (Blazor UI + API)
-cd src/LangMate.AppHost/LangMate.AppHost.AppHost
-dotnet run
-
-# In another terminal you can run API service or tests as needed:
-cd ../../LangMate.AppHost.ApiService
+# Run the .NET Aspire Dashboard
 dotnet run
 ```
 
-3. Open the Blazor UI at the URL reported by `dotnet run` (usually https://localhost:5001).
+Then open `https://localhost:17198/` in your browser to see the .NET Aspire dashboard. You can launch Blazor ChatBot or Web API apps over there by their own links.
 
 ---
 
-## Project structure & short descriptions
+# LangMate.Core SDK
 
-This repository is organized into several projects. Briefly:
+**LangMate.Core** is a lightweight, extensible .NET SDK designed to make working with Ollama-powered local AI models seamless and developer-friendly. It abstracts away the complexity of managing conversations, interacting with Ollama endpoints, and persisting chat history — all while offering resiliency, caching, and extensibility.
 
-- **src/LangMate.Abstractions** — (project folder)
-- **src/LangMate.AppHost/LangMate.AppHost.ApiService** — (project folder)
-- **src/LangMate.AppHost/LangMate.AppHost.AppHost** — (project folder)
-- **src/LangMate.AppHost/LangMate.AppHost.BlazorUI** — (project folder)
-- **src/LangMate.AppHost/LangMate.AppHost.ServiceDefaults** — (project folder)
-- **src/LangMate.AppHost/LangMate.AppHost.Tests** — (project folder)
-- **src/LangMate.Cache** — (project folder)
-- **src/LangMate.Core** — (project folder)
-- **src/LangMate.Extensions** — (project folder)
-- **src/LangMate.Middleware** — (project folder)
-- **tests/LangMate.Cache.Tests** — (project folder)
-- **tests/LangMate.Core.Tests** — (project folder)
-- **tests/LangMate.Middleware.Tests** — (project folder)
+## 📦 Installation
 
-**Highlights**
-- `src/LangMate.Abstractions` — Shared interfaces and DTOs used across the SDK.
-- `src/LangMate.Core` — Core runtime, conversation handling, model adapters and orchestration.
-- `src/LangMate.Cache` — Persistence and caching layers (local disk, optional DB adapters).
-- `src/LangMate.Extensions` — Optional extensions and helper utilities for integrating 3rd-party tools.
-- `src/LangMate.Middleware` — Request/response middleware for augmenting prompts, logging, and safety checks.
-- `src/LangMate.AppHost/*` — Blazor UI, API service, host configurations and defaults.
-- `tests/*` — Unit and integration tests for core modules and middleware.
+To use `LangMate.Core`, install the required NuGet package [![NuGet](https://img.shields.io/nuget/v/LangMate.Core)](https://www.nuget.org/packages/LangMate.Core), or include the project reference in your solution.
+
+```bash
+dotnet add package LangMate.Core
+```
+
+## ✅ Sample Usage
+
+You can see [Full Documentation](src/sdk/LangMate.Core/README.md) and sample usage in this link as well.
 
 ---
 
-## Configuration & environment
+## 🧠 LangMate Blazor Chat UI
 
-- Environment variables used by the projects (examples):
-  - `OLLAMA_URL` — URL to the local Ollama API (e.g. `http://localhost:11434`).
-  - `LANGMATE__DB_PATH` — Path to local persistence files.
-  - Standard ASP.NET Core environment variables (ASPNETCORE_ENVIRONMENT, etc.)
+The **LangMate Blazor App** is an intelligent, real-time chat UI built with Blazor Server and integrated with the powerful local AI models provided by Ollama using ***LangMate.Core SDK***.
 
-Check project `appsettings.json` files under `src/LangMate.AppHost/*` for concrete configuration keys.
+It provides a complete frontend experience for interacting with AI models, managing chat history, uploading files, and dynamically updating chat state.
+
+### ✨ Features
+
+- 🔁 Chat with Ollama Models: Seamlessly send and stream messages from local Ollama instances.
+
+- 💬 Persistent Conversations: Every chat session is stored in MongoDB and can be resumed anytime.
+
+- 📂 File Uploads: Upload image files and pass them to models like llava for multimodal interactions.
+
+- 🧭 Sidebar Navigation: Access previous chats and start new ones from a clean sidebar UI.
+
+- 📦 Model Switching: Easily switch between available Ollama models.
+
+- 🔃 Streaming Responses: Uses async streaming to display tokens as they’re generated.
+
+- ☁️ Resilient Middleware: Protected with timeout, retry, and circuit breaker policies.
+
+- 🔔 Global Error Toasts: All unhandled exceptions surface as toast notifications.
+
+## Screenshots
+
+<div><img src="assets/chat-blazor-ui/home.png" alt="LangMate Blazor Chat UI - Home Page"/></div>
+<br>
+<div><img src="assets/chat-blazor-ui/chat-ui.jpg" alt="LangMate Blazor Chat UI - Chat user interface"/></div>
+<br>
+<div><img src="assets/chat-blazor-ui/sample-conversation.jpg" alt="LangMate Blazor Chat UI - Sample chat"/></div>
 
 ---
 
-## Contributing
+## 📡 LangMate WebAPI
 
-See `CONTRIBUTING.md` for guidelines on development, testing, style and PR process.
+The **LangMate API Service** is the backend layer of the LangMate system, exposing RESTful HTTP APIs for external integration, orchestration, and automation.
+
+It serves as a stateless gateway for interacting with the LangMate core functionalities — such as chat sessions, file uploads, model management, and streaming chat completions — powered by the ***LangMate.Core SDK*** and ***Ollama***.
+
+### ✨ Features
+
+- 🔗 Chat Completion API: Start or continue chat sessions supporting stream mode with local Ollama models.
+
+- 🧠 Model Discovery: Query available and pulled models from the Ollama runtime.
+
+- 💬 Conversation APIs: Read, delete, and manage persistent chat history.
+
+- 🖼️ File Upload: Upload image files to be used with multimodal models (e.g., gemma).
+
+- 🔐 Middleware-Enhanced Resilience: Protected by retry, timeout, and circuit breaker policies via LangMate.Middleware.
+
+- ⚙️ Scalar Integration: Auto-generated OpenAPI documentation (easily added).
+
+<br>
+<div><img src="assets/web-api/api-doc.png" alt="LangMate Web API documentation"/></div>
 
 ---
 
-## License
+## 🛠️ Build and Test
 
-Include project license here if present (add `LICENSE` file at repo root if missing).
+```bash
+dotnet build --configuration Release
+dotnet test
+```
 
 ---
 
-_Last updated: 2025-09-29 16:59 UTC_
+## 📬 Contributing
+
+Contributions are welcome!
+
+1. Fork the repo and create your branch
+2. Implement your feature or fix
+3. Submit a PR with proper context
+
+---
+
+## 📄 License
+
+Licensed under the [MIT License](LICENSE).
+
+---
+
+## 📣 Contact
+
+Created and maintained by [@raminesfahani](https://github.com/raminesfahani).  
+For issues and features, open a [GitHub Issue](https://github.com/raminesfahani/LangMate/issues).
+
+---
