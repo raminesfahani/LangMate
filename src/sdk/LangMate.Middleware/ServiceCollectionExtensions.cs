@@ -1,4 +1,5 @@
 ﻿using LangMate.Abstractions.Contracts;
+using LangMate.Abstractions.Options;
 using LangMate.Middleware.Middlewares;
 using LangMate.Middleware.Serilog;
 using LangMate.Persistence;
@@ -14,6 +15,10 @@ namespace LangMate.Middleware
     {
         public static IServiceCollection AddLangMateMiddleware(this IServiceCollection services, IConfiguration configuration, bool useApm = false)
         {
+            ResiliencyMiddlewareOptions options = new();
+            services.Configure<ResiliencyMiddlewareOptions>(configuration.GetSection(nameof(ResiliencyMiddlewareOptions)));
+            configuration.GetSection(nameof(ResiliencyMiddlewareOptions)).Bind(options);
+
             services.AddLangMateMemoryCache();
             services.AddLangMateMongoDb(configuration);
 

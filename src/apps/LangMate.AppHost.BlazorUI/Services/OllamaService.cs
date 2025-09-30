@@ -4,9 +4,9 @@ using Ollama;
 
 namespace LangMate.AppHost.BlazorUI.Services;
 
-public class OllamaService(IOllamaFactoryProvider ollamaFactoryProvider)
+public class OllamaService(IOllamaFactory ollamaFactoryProvider)
 {
-    private readonly IOllamaFactoryProvider _ollamaFactoryProvider = ollamaFactoryProvider;
+    private readonly IOllamaFactory _ollamaFactoryProvider = ollamaFactoryProvider;
 
     public async Task<IEnumerable<Abstractions.Abstracts.Documents.OllamaModel>> GetModelListAsync(string term = "")
     {

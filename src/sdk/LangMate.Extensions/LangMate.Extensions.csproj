@@ -1,14 +1,25 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-    <TargetFramework>net9.0</TargetFramework>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <Nullable>enable</Nullable>
-  </PropertyGroup>
+	<PropertyGroup>
+		<TargetFramework>net9.0</TargetFramework>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Nullable>enable</Nullable>
+		<PackageId>LangMate.Extensions</PackageId>
+		<IsPackable>true</IsPackable>
+		<Authors>Ramin Esfahani</Authors>
+		<Version>1.0.3</Version>
+		<PackageIcon>logo.png</PackageIcon>
+		<PackageReadmeFile>README.md</PackageReadmeFile>
+		<Description>
+			LangMate.Extensions is a lightweight utility library that provides common extensions, helper methods, and infrastructure wiring to support the LangMate ecosystem. It is designed to promote clean architecture, minimal boilerplate, and modular service registration across LangMate-based apps and services.
+		</Description>
+	</PropertyGroup>
 
 	<ItemGroup>
 		<PackageReference Include="DotEnvFile" Version="2.1.0" />
 		<PackageReference Include="System.Drawing.Common" Version="6.0.0" />
 		<PackageReference Include="xunit.abstractions" Version="2.0.3" />
+		<None Include="README.md" Pack="true" PackagePath="" />
+		<None Include="logo.png" />
 	</ItemGroup>
 </Project>

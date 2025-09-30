@@ -4,7 +4,7 @@ using LangMate.Abstractions.Contracts;
 using LangMate.Abstractions.Options;
 using Microsoft.Extensions.Options;
 
-namespace LangMate.Core.Providers
+namespace LangMate.Core.Ollama
 {
     public class OllamaScraper(IOptions<OllamaOptions> options) : IOllamaScraper
     {

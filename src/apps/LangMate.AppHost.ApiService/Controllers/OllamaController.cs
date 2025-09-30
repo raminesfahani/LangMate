@@ -1,20 +1,16 @@
 using LangMate.Abstractions.Contracts;
-using LangMate.Core.Providers;
-using LangMate.Persistence.NoSQL.MongoDB.Settings;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Options;
 using Ollama;
-using System;
 using System.ComponentModel.DataAnnotations;
 
 namespace LangMate.AppHost.ApiService.Controllers
 {
     [ApiController]
     [Route("[controller]")]
-    public class OllamaController(ILogger<OllamaController> logger, IOllamaFactoryProvider ollamaFactoryProvider) : ControllerBase
+    public class OllamaController(ILogger<OllamaController> logger, IOllamaFactory ollamaFactoryProvider) : ControllerBase
     {
         private readonly ILogger<OllamaController> _logger = logger;
-        private readonly IOllamaFactoryProvider _ollamaFactoryProvider = ollamaFactoryProvider;
+        private readonly IOllamaFactory _ollamaFactoryProvider = ollamaFactoryProvider;
 
         [HttpGet("models")]
         public async Task<IActionResult> GetModelListAsync(string term = "")

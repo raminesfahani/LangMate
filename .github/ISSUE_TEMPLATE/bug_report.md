@@ -1,6 +1,6 @@
 ---
 name: 🐞 Bug Report
-about: Report a bug to help us improve Netrilo Infrastructure
+about: Report a bug to help us improve LangMate
 title: "[Bug]: "
 labels: bug
 assignees: ''
@@ -21,7 +21,7 @@ If applicable, add logs or screenshots to help explain your problem.
 ## 🖥️ Environment
 - OS: [e.g. Windows 11, macOS 13]
 - .NET SDK Version: [e.g. 7.0.100]
-- Netrilo Module(s): [e.g. Persistence, Messaging]
+- LangMate Module(s): [e.g. Persistence, Middleware]
 
 ## 🙏 Additional Context
 Add any other context about the problem here.

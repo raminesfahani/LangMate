@@ -1,27 +1,38 @@
 # LangMate.Persistence
 
-**LangMate.Persistence** — Persistence and caching layer for storing conversations, states, or embeddings.
+> Part of the [LangMate.Core](https://github.com/raminesfahani/LangMate) SDK
 
-## Usage
+## 📦 NuGet
+
+[![NuGet](https://img.shields.io/nuget/v/LangMate.Persistence)](https://www.nuget.org/packages/LangMate.Persistence)
+
+**LangMate.Persistence** provides a clean and extensible MongoDB-based persistence layer for the LangMate ecosystem. It powers features like chat history, conversation storage, and data caching in LangMate-based applications.
+
+## ✨ Features
+
+- MongoDB support for chat conversations and messages
+- Repository pattern abstraction for testability and clean architecture
+- Pluggable via DI using LangMate.Core
+- Optional caching support
+- Built for high-performance and scalable data access
+
+## 📦 Installation
+
+To use `LangMate.Persistence`, install the required NuGet package, or include the project reference in your solution.
 
 ```bash
-cd src/LangMate.Cache
-dotnet build
-dotnet run
+dotnet add package LangMate.Extensions
 ```
 
-(if applicable — library projects are meant to be referenced from other projects, not run directly)
+## 🔧 Service Registration
 
-## Features
-- Designed to integrate with other LangMate projects seamlessly.
-- Written in C# targeting .NET 8.0+.
-- Part of the modular LangMate ecosystem.
+In your `Program.cs` or inside a service registration method (already is done in LangMate.Core):
 
-## Development notes
-- Keep code clean and well-documented.
-- Add/update unit tests in related `*.Tests` projects when making changes.
-- Configuration is usually read from `appsettings.json` or environment variables.
+```csharp
+services.AddLangMateMemoryCache();
+services.AddLangMateMongoDb(configuration);
+```
 
----
+## 📄 License
 
-_Last updated: 2025-09-29 17:06 UTC_
+MIT License

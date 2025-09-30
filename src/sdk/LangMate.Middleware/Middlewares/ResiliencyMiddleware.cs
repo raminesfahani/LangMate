@@ -1,5 +1,7 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using LangMate.Abstractions.Options;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using Polly;
 using Polly.CircuitBreaker;
 using Polly.Retry;
@@ -15,16 +17,18 @@ namespace LangMate.Middleware.Middlewares
         private readonly AsyncRetryPolicy _retryPolicy;
         private readonly AsyncTimeoutPolicy _timeoutPolicy;
         private readonly AsyncCircuitBreakerPolicy _circuitBreakerPolicy;
+        private readonly ResiliencyMiddlewareOptions _options;
 
-        public ResiliencyMiddleware(RequestDelegate next, ILogger<ResiliencyMiddleware> logger)
+        public ResiliencyMiddleware(RequestDelegate next, ILogger<ResiliencyMiddleware> logger, IOptions<ResiliencyMiddlewareOptions> options)
         {
             _next = next;
             _logger = logger;
+            _options = options.Value;
 
             _retryPolicy = Policy
                 .Handle<Exception>()
                 .WaitAndRetryAsync(
-                    3,
+                    _options.RetryCount,
                     attempt => TimeSpan.FromSeconds(attempt),
                     (exception, timeSpan, retryCount, context) =>
                     {
@@ -32,13 +36,13 @@ namespace LangMate.Middleware.Middlewares
                     });
 
             _timeoutPolicy = Policy
-                .TimeoutAsync(20);
+                .TimeoutAsync(_options.TimeoutSeconds);
 
             _circuitBreakerPolicy = Policy
                 .Handle<Exception>()
                 .CircuitBreakerAsync(
-                    5,
-                    TimeSpan.FromSeconds(30),
+                    _options.ExceptionsAllowedBeforeCircuitBreaking,
+                    TimeSpan.FromSeconds(_options.CircuitBreakingDurationSeconds),
                     onBreak: (ex, ts) =>
                         _logger.LogWarning("Circuit broken: {Message}", ex.Message),
                     onReset: () =>

@@ -4,6 +4,15 @@
 		<TargetFramework>net9.0</TargetFramework>
 		<ImplicitUsings>enable</ImplicitUsings>
 		<Nullable>enable</Nullable>
+		<PackageId>LangMate.Persistence</PackageId>
+		<IsPackable>true</IsPackable>
+		<Authors>Ramin Esfahani</Authors>
+		<Version>1.0.3</Version>
+		<PackageIcon>logo.png</PackageIcon>
+		<PackageReadmeFile>README.md</PackageReadmeFile>
+		<Description>
+			LangMate.Persistence is the data access layer of the LangMate ecosystem. It provides a MongoDB-based persistence infrastructure tailored for storing and retrieving AI chat conversations, messages, and cached data in a scalable and performant way.
+		</Description>
 	</PropertyGroup>
 
 	<ItemGroup>
@@ -19,6 +28,8 @@
 
 	<ItemGroup>
 		<Folder Include="NoSQL\" />
+		<None Include="README.md" Pack="true" PackagePath="" />
+		<None Include="logo.png" />
 	</ItemGroup>
 
 </Project>

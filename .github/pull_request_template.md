@@ -1,6 +1,6 @@
 # 🚀 Pull Request Template
 
-Thank you for your contribution to **Netrilo Infrastructure**! Please complete the checklist and provide all necessary information.
+Thank you for your contribution to **LangMate**! Please complete the checklist and provide all necessary information.
 
 ---
 

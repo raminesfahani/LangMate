@@ -1,6 +1,6 @@
 ---
 name: ✨ Feature Request
-about: Suggest an idea or improvement for Netrilo Infrastructure
+about: Suggest an idea or improvement for LangMate
 title: "[Feature]: "
 labels: enhancement
 assignees: ''

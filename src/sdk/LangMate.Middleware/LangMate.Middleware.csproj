@@ -1,25 +1,36 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-    <TargetFramework>net9.0</TargetFramework>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <Nullable>enable</Nullable>
-  </PropertyGroup>
+	<PropertyGroup>
+		<TargetFramework>net9.0</TargetFramework>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Nullable>enable</Nullable>
+		<PackageId>LangMate.Middleware</PackageId>
+		<IsPackable>true</IsPackable>
+		<Authors>Ramin Esfahani</Authors>
+		<Version>1.0.3</Version>
+		<PackageIcon>logo.png</PackageIcon>
+		<PackageReadmeFile>README.md</PackageReadmeFile>
+		<Description>
+			LangMate.Middleware is a modular ASP.NET Core middleware library focused on resilient API execution, structured exception handling, logging, and developer experience during API development and runtime in the LangMate ecosystem.
+		</Description>
+	</PropertyGroup>
 
-  <ItemGroup>
-	  <PackageReference Include="Polly" Version="8.6.3" />
-	  <PackageReference Include="Serilog" Version="4.3.0" />
-	  <PackageReference Include="Serilog.AspNetCore" Version="9.0.0" />
-	  <PackageReference Include="Serilog.Enrichers.CorrelationId" Version="3.0.1" />
-	  <PackageReference Include="Serilog.Exceptions" Version="8.4.0" />
-	  <PackageReference Include="Serilog.Extensions.Logging" Version="9.0.2" />
-	  <PackageReference Include="Serilog.Sinks.Elasticsearch" Version="10.0.0" />
-	  <PackageReference Include="Elastic.Apm.NetCoreAll" Version="1.34.0" />
-  </ItemGroup>
+	<ItemGroup>
+		<PackageReference Include="Polly" Version="8.6.3" />
+		<PackageReference Include="Serilog" Version="4.3.0" />
+		<PackageReference Include="Serilog.AspNetCore" Version="9.0.0" />
+		<PackageReference Include="Serilog.Enrichers.CorrelationId" Version="3.0.1" />
+		<PackageReference Include="Serilog.Exceptions" Version="8.4.0" />
+		<PackageReference Include="Serilog.Extensions.Logging" Version="9.0.2" />
+		<PackageReference Include="Serilog.Sinks.Elasticsearch" Version="10.0.0" />
+		<PackageReference Include="Elastic.Apm.NetCoreAll" Version="1.34.0" />
+	</ItemGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\LangMate.Abstractions\LangMate.Abstractions.csproj" />
-    <ProjectReference Include="..\LangMate.Persistence\LangMate.Persistence.csproj" />
-  </ItemGroup>
+	<ItemGroup>
+		<ProjectReference Include="..\LangMate.Abstractions\LangMate.Abstractions.csproj" />
+		<ProjectReference Include="..\LangMate.Persistence\LangMate.Persistence.csproj" />
+		<None Include="README.md" Pack="true" PackagePath="" />
+		<None Include="logo.png" />
+	</ItemGroup>
 
 </Project>

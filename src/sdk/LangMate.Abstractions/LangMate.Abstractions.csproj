@@ -1,10 +1,18 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-    <TargetFramework>net9.0</TargetFramework>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <Nullable>enable</Nullable>
-  </PropertyGroup>
+	<PropertyGroup>
+		<TargetFramework>net9.0</TargetFramework>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Nullable>enable</Nullable>
+		<PackageId>LangMate.Abstractions</PackageId>
+		<Authors>Ramin Esfahani</Authors>
+		<Version>1.0.3</Version>
+		<PackageIcon>logo.png</PackageIcon>
+		<PackageReadmeFile>README.md</PackageReadmeFile>
+		<Description>
+			LangMate.Abstractions shared interfaces, contracts, and data transfer objects used across LangMate SDK.
+		</Description>
+	</PropertyGroup>
 
 	<ItemGroup>
 		<PackageReference Include="AutoMapper" Version="13.0.1" />
@@ -14,7 +22,9 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <Folder Include="Abstracts\Providers\" />
-	  <Folder Include="Enums\" />
+		<Folder Include="Abstracts\Providers\" />
+		<Folder Include="Enums\" />
+		<None Include="README.md" Pack="true" PackagePath="" />
+		<None Include="logo.png" Pack="true" PackagePath="" />
 	</ItemGroup>
 </Project>

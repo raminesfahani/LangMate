@@ -4,7 +4,7 @@ using Ollama;
 
 namespace LangMate.Abstractions.Contracts
 {
-    public interface IOllamaFactoryProvider
+    public interface IOllamaFactory
     {
         IOllamaApiClient Client { get; }
 

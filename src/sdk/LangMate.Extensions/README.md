@@ -1,16 +1,19 @@
 # LangMate.Extensions
+> Part of the [LangMate.Core](https://github.com/raminesfahani/LangMate) SDK
+
+## 📦 NuGet
+
+[![NuGet](https://img.shields.io/nuget/v/LangMate.Extensions)](https://www.nuget.org/packages/LangMate.Extensions)
+
 
 **LangMate.Extensions** — Optional extensions and helper utilities for integrating external systems.
 
-## Usage
+
+## 🚀 Installation
 
 ```bash
-cd src/LangMate.Extensions
-dotnet build
-dotnet run
+dotnet add package LangMate.Extensions
 ```
-
-(if applicable — library projects are meant to be referenced from other projects, not run directly)
 
 ## Features
 - Designed to integrate with other LangMate projects seamlessly.
@@ -19,9 +22,10 @@ dotnet run
 
 ## Development notes
 - Keep code clean and well-documented.
-- Add/update unit tests in related `*.Tests` projects when making changes.
 - Configuration is usually read from `appsettings.json` or environment variables.
 
 ---
 
-_Last updated: 2025-09-29 17:06 UTC_
+## 📄 License
+
+MIT License

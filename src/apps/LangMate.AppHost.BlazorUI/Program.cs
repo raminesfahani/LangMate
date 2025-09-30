@@ -1,9 +1,14 @@
+using LangMate.AppHost.BlazorUI.Components;
 using LangMate.AppHost.BlazorUI.Services;
 using LangMate.AppHost.ServiceDefaults;
-using LangMate.AppHost.BlazorUI.Components;
 using LangMate.Core;
+using LangMate.Middleware.Serilog;
+using Serilog;
+using Serilog.Core;
+using System.Configuration;
 
 var builder = WebApplication.CreateBuilder(args);
+Log.Logger = LangMateLoggingExtensions.AddLangMateLogging(builder.Configuration);
 
 builder.Services.AddControllers();
 

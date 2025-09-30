@@ -7,8 +7,12 @@
 		<PackageId>LangMate.Core</PackageId>
 		<IsPackable>true</IsPackable>
 		<Authors>Ramin Esfahani</Authors>
-		<Description>LangMate.Core is the central SDK for building modular, AI-powered pipelines across multiple language model providers such as OpenAI, Azure OpenAI, HuggingFace, and LocalAI.</Description>
-		<Version>1.0.1</Version>
+		<Version>1.0.3</Version>
+		<PackageIcon>logo.png</PackageIcon>
+		<PackageReadmeFile>README.md</PackageReadmeFile>
+		<Description>
+			LangMate.Core is a lightweight, extensible .NET SDK designed to make working with Ollama-powered local AI models seamless and developer-friendly. It abstracts away the complexity of managing conversations, interacting with Ollama endpoints, and persisting chat history — all while offering resiliency, caching, and extensibility.
+		</Description>
 	</PropertyGroup>
 
 	<ItemGroup>
@@ -21,6 +25,8 @@
 	<ItemGroup>
 		<ProjectReference Include="..\LangMate.Extensions\LangMate.Extensions.csproj" />
 		<ProjectReference Include="..\LangMate.Middleware\LangMate.Middleware.csproj" />
+		<None Include="README.md" Pack="true" PackagePath="" />
+		<None Include="logo.png" Pack="true" PackagePath="" />
 	</ItemGroup>
 
 </Project>

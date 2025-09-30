@@ -1,7 +1,7 @@
 ﻿using LangMate.Abstractions.Abstracts.Settings;
 using LangMate.Abstractions.Contracts;
 using LangMate.Abstractions.Options;
-using LangMate.Core.Providers;
+using LangMate.Core.Ollama;
 using LangMate.Middleware;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Configuration;
@@ -19,7 +19,7 @@ namespace LangMate.Core
             services.Configure<OllamaOptions>(configuration.GetSection(nameof(OllamaOptions)));
             configuration.GetSection(nameof(OllamaOptions)).Bind(options);
 
-            services.AddLangMateMiddleware(configuration, useApm);
+            services.AddLangMateMiddleware(configuration, useApm: useApm);
 
             services.AddSingleton<IOllamaApiClient>(factory =>
             {
@@ -27,7 +27,7 @@ namespace LangMate.Core
             });
 
             services.AddScoped<IOllamaScraper, OllamaScraper>();
-            services.AddScoped<IOllamaFactoryProvider, OllamaFactoryProvider>();
+            services.AddScoped<IOllamaFactory, OllamaFactory>();
 
             services.AddAutoMapper(cfg =>
             {

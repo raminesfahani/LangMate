@@ -7,14 +7,14 @@ using Ollama;
 using System.IO;
 using System.Reflection;
 
-namespace LangMate.Core.Providers
+namespace LangMate.Core.Ollama
 {
-    public class OllamaFactoryProvider(IOptions<OllamaOptions> options,
+    public class OllamaFactory(IOptions<OllamaOptions> options,
                                         IOllamaApiClient client,
                                         ICacheProvider cache,
                                         IOllamaScraper scraper,
                                         IMongoRepository<OllamaModel> ollamaModelsRepo,
-                                       IMongoRepository<ConversationDocument> conversationRepo) : IOllamaFactoryProvider
+                                       IMongoRepository<ConversationDocument> conversationRepo) : IOllamaFactory
     {
         private readonly IOptions<OllamaOptions> _options = options;
         private readonly IOllamaApiClient _client = client;

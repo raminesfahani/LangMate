@@ -1,6 +1,4 @@
 using LangMate.Abstractions.Contracts;
-using LangMate.Core.Providers;
-using LangMate.Persistence.NoSQL.MongoDB.Settings;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 using Ollama;
@@ -11,10 +9,10 @@ namespace LangMate.AppHost.ApiService.Controllers
 {
     [ApiController]
     [Route("[controller]")]
-    public class ChatController(ILogger<ChatController> logger, IOllamaFactoryProvider ollamaFactoryProvider) : ControllerBase
+    public class ChatController(ILogger<ChatController> logger, IOllamaFactory ollamaFactoryProvider) : ControllerBase
     {
         private readonly ILogger<ChatController> _logger = logger;
-        private readonly IOllamaFactoryProvider _ollamaFactoryProvider = ollamaFactoryProvider;
+        private readonly IOllamaFactory _ollamaFactoryProvider = ollamaFactoryProvider;
 
         [HttpGet("conversations")]
         public IActionResult GetConversations()

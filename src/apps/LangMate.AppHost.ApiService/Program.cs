@@ -1,9 +1,12 @@
 using LangMate.AppHost.ServiceDefaults;
 using LangMate.Core;
+using LangMate.Middleware.Serilog;
 using Microsoft.Extensions.Options;
 using Scalar.AspNetCore;
+using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
+Log.Logger = LangMateLoggingExtensions.AddLangMateLogging(builder.Configuration);
 
 // Add service defaults & Aspire client integrations.
 builder.AddServiceDefaults();
