@@ -4,11 +4,13 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Language](https://img.shields.io/github/languages/top/raminesfahani/LangMate)](https://github.com/raminesfahani/LangMate/search?l=c%23)
 ![GitHub Repo stars](https://img.shields.io/github/stars/raminesfahani/LangMate?style=social)
+[![NuGet](https://img.shields.io/nuget/v/LangMate.Core)](https://www.nuget.org/packages/LangMate.Core)
+
+![LangMate Logo](https://github.com/raminesfahani/LangMate/raw/main/logo.png)
 
 **LangMate** is a modular and extensible AI chat application and SDK platform built with .NET 9 and fully compatible with .NET Aspire.  
 It provides a Blazor-powered Web UI, Ollama model integrations, persistent chat history via MongoDB, and a flexible SDK for .NET developers to integrate and use local LLMs (like Gemma, LLaMA2, Mistral) easily and securely.
 
-![LangMate Logo](https://github.com/raminesfahani/LangMate/raw/main/logo.png)
 ---
 
 ## 🌟 Key Features
