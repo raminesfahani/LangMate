@@ -6,6 +6,7 @@ using Microsoft.Extensions.Options;
 using Ollama;
 using System.IO;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 
 namespace LangMate.Core.Ollama
 {
@@ -32,43 +33,18 @@ namespace LangMate.Core.Ollama
         /// <inheritdoc />
         public IOllamaApiClient Client => _client;
 
-        /// <inheritdoc />
-        public async Task<ModelsResponse> GetAvailableModelsAsync(CancellationToken ct = default)
+        private async IAsyncEnumerable<GenerateChatCompletionResponse> WrappedStream(IAsyncEnumerable<GenerateChatCompletionResponse> originalStream, ConversationDocument conversation, [EnumeratorCancellation] CancellationToken ct = default)
         {
-            return await _client.Models.ListModelsAsync(ct);
-        }
-
-        /// <inheritdoc />
-        public async Task<(string conversationId, IAsyncEnumerable<GenerateChatCompletionResponse> response)> StartNewChatCompletionAsync(
-            GenerateChatCompletionRequest request, CancellationToken ct = default)
-        {
-            await CheckRequestModelValidation(request);
-
-            var conversation = new ConversationDocument
-            {
-                Title = TruncateMessage(request.Messages.FirstOrDefault(x => x.Role == MessageRole.User)?.Content ?? request.Messages[0].Content, 40),
-                Messages = [.. request.Messages],
-                Model = request.Model,
-            };
-
-            await _conversationRepo.InsertOneAsync(conversation);
-            var stream = _client.Chat.GenerateChatCompletionAsync(request, ct);
-
             var response = "";
-            async IAsyncEnumerable<GenerateChatCompletionResponse> WrappedStream(IAsyncEnumerable<GenerateChatCompletionResponse> originalStream)
+            await foreach (var item in originalStream.WithCancellation(ct))
             {
-                await foreach (var item in originalStream.WithCancellation(ct))
-                {
-                    response += item?.Message.Content;
-                    if (item == null) continue;
+                response += item?.Message.Content;
+                if (item == null) continue;
 
-                    yield return item;
-                }
-
-                await OnStreamCompletedAsync(conversation.ConversationId, response);
+                yield return item;
             }
 
-            return (conversation.Id.ToString(), WrappedStream(stream));
+            await OnStreamCompletedAsync(conversation.ConversationId, response);
         }
 
         /// <summary>
@@ -91,9 +67,62 @@ namespace LangMate.Core.Ollama
             if (request.Messages == null || request.Messages.Any() == false)
                 throw new ArgumentException("The request must contain at least one message.");
 
-            var localModels = await GetModelsListAsync();
+            var localModels = await GetAvailableModelsListAsync();
             if (string.IsNullOrWhiteSpace(request.Model) || localModels.Any(x => x.Name == request.Model) == false)
                 throw new ArgumentException($"The model '{request.Model}' is not available.");
+        }
+
+
+        /// <summary>
+        /// Returns locally cached models that are still valid based on the cache lifetime.
+        /// </summary>
+        private List<OllamaModel> GetOllamaModelsCache(TimeSpan lifetime)
+        {
+            return [.. _ollamaModelsRepo.FilterBy(x => x.CreatedAt.Add(lifetime) >= DateTime.UtcNow)];
+        }
+
+        /// <summary>
+        /// Updates the local model cache by scraping the Ollama model list and persisting to MongoDB.
+        /// </summary>
+        private async Task<List<OllamaModel>> UpdateOllamaModelsCacheAsync()
+        {
+            _ollamaModelsRepo.DeleteMany(x => true);
+            var models = await _scraper.ScrapeModelsAsync();
+            await _ollamaModelsRepo.InsertManyAsync(models);
+            return models;
+        }
+
+        /// <summary>
+        /// Truncates a message to a maximum length, preserving initial characters.
+        /// </summary>
+        private static string TruncateMessage(string message, int maxLength)
+        {
+            return message.Length <= maxLength ? message : message[..maxLength];
+        }
+
+        /// <inheritdoc />
+        public async Task<ModelsResponse> GetInstalledModelsAsync(CancellationToken ct = default)
+        {
+            return await _client.Models.ListModelsAsync(ct);
+        }
+
+        /// <inheritdoc />
+        public async Task<(string conversationId, IAsyncEnumerable<GenerateChatCompletionResponse> response)> StartNewChatCompletionAsync(
+            GenerateChatCompletionRequest request, CancellationToken ct = default)
+        {
+            await CheckRequestModelValidation(request);
+
+            var conversation = new ConversationDocument
+            {
+                Title = TruncateMessage(request.Messages.FirstOrDefault(x => x.Role == MessageRole.User)?.Content ?? request.Messages[0].Content, 40),
+                Messages = [.. request.Messages],
+                Model = request.Model,
+            };
+
+            await _conversationRepo.InsertOneAsync(conversation);
+            var stream = _client.Chat.GenerateChatCompletionAsync(request, ct);
+
+            return (conversation.Id.ToString(), WrappedStream(stream, conversation, ct));
         }
 
         /// <inheritdoc />
@@ -112,20 +141,7 @@ namespace LangMate.Core.Ollama
             request.Messages = conversation.Messages;
             var stream = _client.Chat.GenerateChatCompletionAsync(request, ct);
 
-            var response = "";
-            async IAsyncEnumerable<GenerateChatCompletionResponse> WrappedStream(IAsyncEnumerable<GenerateChatCompletionResponse> originalStream)
-            {
-                await foreach (var item in originalStream.WithCancellation(ct))
-                {
-                    response += item?.Message.Content;
-                    if (item == null) continue;
-                    yield return item;
-                }
-
-                await OnStreamCompletedAsync(conversation.ConversationId, response);
-            }
-
-            return WrappedStream(stream);
+            return WrappedStream(stream, conversation, ct);
         }
 
         /// <inheritdoc />
@@ -174,37 +190,10 @@ namespace LangMate.Core.Ollama
         }
 
         /// <inheritdoc />
-        public async Task<List<OllamaModel>> GetModelsListAsync()
+        public async Task<List<OllamaModel>> GetAvailableModelsListAsync()
         {
             var models = GetOllamaModelsCache(TimeSpan.FromHours(2));
             return models.Count > 0 ? models : await UpdateOllamaModelsCacheAsync();
-        }
-
-        /// <summary>
-        /// Returns locally cached models that are still valid based on the cache lifetime.
-        /// </summary>
-        private List<OllamaModel> GetOllamaModelsCache(TimeSpan lifetime)
-        {
-            return [.. _ollamaModelsRepo.FilterBy(x => x.CreatedAt.Add(lifetime) >= DateTime.UtcNow)];
-        }
-
-        /// <summary>
-        /// Updates the local model cache by scraping the Ollama model list and persisting to MongoDB.
-        /// </summary>
-        private async Task<List<OllamaModel>> UpdateOllamaModelsCacheAsync()
-        {
-            _ollamaModelsRepo.DeleteMany(x => true);
-            var models = await _scraper.ScrapeModelsAsync();
-            await _ollamaModelsRepo.InsertManyAsync(models);
-            return models;
-        }
-
-        /// <summary>
-        /// Truncates a message to a maximum length, preserving initial characters.
-        /// </summary>
-        private static string TruncateMessage(string message, int maxLength)
-        {
-            return message.Length <= maxLength ? message : message[..maxLength];
         }
     }
 

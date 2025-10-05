@@ -49,7 +49,7 @@ namespace LangMate.Abstractions.Contracts
         /// </summary>
         /// <param name="ct">Optional cancellation token.</param>
         /// <returns>A list of available model metadata.</returns>
-        Task<ModelsResponse> GetAvailableModelsAsync(CancellationToken ct = default);
+        Task<ModelsResponse> GetInstalledModelsAsync(CancellationToken ct = default);
 
         /// <summary>
         /// Gets the full conversation document, including message history, by conversation ID.
@@ -62,7 +62,7 @@ namespace LangMate.Abstractions.Contracts
         /// Retrieves a list of all locally available Ollama models.
         /// </summary>
         /// <returns>A list of Ollama model metadata.</returns>
-        Task<List<OllamaModel>> GetModelsListAsync();
+        Task<List<OllamaModel>> GetAvailableModelsListAsync();
 
         /// <summary>
         /// Streams the model download process from Ollama.

@@ -1,18 +1,22 @@
 ﻿var builder = DistributedApplication.CreateBuilder(args);
 
-
+// Getting MongoDB parameters from env
 var username = builder.AddParameter("mongo-username");
 var password = builder.AddParameter("mongo-password");
+
 var mongo = builder.AddMongoDB("mongo", 27017)
-                    .WithDataVolume()
+                    .WithDataVolume("mongo-data")
                     .WithDbGate();
 
 var ollama = builder.AddOllama("ollama", 11434)
                     .WithImageTag("latest")
-                    .WithDataVolume()
+                    .WithDataVolume("ollama-data")
                     .WithGPUSupport();
 
-var api = builder.AddProject<Projects.LangMate_AppHost_ApiService>("langmate-api")
+// Optional
+//ollama.AddModel("llama3"); // Download a sample ollama model
+
+builder.AddProject<Projects.LangMate_AppHost_ApiService>("langmate-api")
                 .WithHttpHealthCheck("/health")
                 .WithHttpEndpoint(name: "external", port: 5001)
                 .WithReference(mongo)

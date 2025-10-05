@@ -22,15 +22,15 @@ namespace LangMate.Persistence.NoSQL.MongoDB.Repository
 
             try
             {
-                database.CreateCollection(GetCollectionName(typeof(TDocument)));
+                database.CreateCollection(MongoRepository<TDocument>.GetCollectionName(typeof(TDocument)));
             }
             catch (Exception) { }
 
-            _collection = database.GetCollection<TDocument>(GetCollectionName(typeof(TDocument)));
+            _collection = database.GetCollection<TDocument>(MongoRepository<TDocument>.GetCollectionName(typeof(TDocument)));
 
         }
 
-        private protected string GetCollectionName(Type documentType)
+        private protected static string GetCollectionName(Type documentType)
         {
             return ((BsonCollectionAttribute)documentType.GetCustomAttributes(
                     typeof(BsonCollectionAttribute),

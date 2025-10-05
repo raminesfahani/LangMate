@@ -10,14 +10,14 @@ public class OllamaService(IOllamaFactory ollamaFactoryProvider)
 
     public async Task<IEnumerable<Abstractions.Abstracts.Documents.OllamaModel>> GetModelListAsync(string term = "")
     {
-        var models = await _ollamaFactoryProvider.GetModelsListAsync();
+        var models = await _ollamaFactoryProvider.GetAvailableModelsListAsync();
 
         return models.Where(x => x.Name.Contains(term) || x.Description.Contains(term));
     }
 
     public async Task<ModelsResponse> GetLocalModels()
     {
-        var models = await _ollamaFactoryProvider.GetAvailableModelsAsync();
+        var models = await _ollamaFactoryProvider.GetInstalledModelsAsync();
         return models;
     }
 
