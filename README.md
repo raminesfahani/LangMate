@@ -185,3 +185,7 @@ Created and maintained by [@raminesfahani](https://github.com/raminesfahani).
 For issues and features, open a [GitHub Issue](https://github.com/raminesfahani/LangMate/issues).
 
 ---
+
+## 🙏 Acknowledgements
+
+This project uses the [Ollama repository](https://github.com/tryAGI/Ollama) for local AI model integration. I am thankful to the maintainers and contributors of Ollama for making this technology available.

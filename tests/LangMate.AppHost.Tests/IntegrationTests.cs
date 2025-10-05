@@ -10,7 +10,6 @@ using Microsoft.VisualStudio.Threading;
 using MongoDB.Bson;
 using Moq;
 using Ollama;
-using OllamaSharp.Models;
 using System.Net.Http.Json;
 using System.Threading;
 using Xunit.v3;
@@ -22,7 +21,7 @@ public class IntegrationTests : IAsyncLifetime
 {
     private static readonly TimeSpan DefaultTimeout = TimeSpan.FromMinutes(1);
 
-    private DistributedApplication _appHost;
+    private DistributedApplication? _appHost;
     private CancellationToken _cancellationToken;
 
     async ValueTask IAsyncLifetime.InitializeAsync()
