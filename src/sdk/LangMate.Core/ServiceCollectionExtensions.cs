@@ -39,7 +39,7 @@ namespace LangMate.Core
             // Register singleton Ollama API client with base endpoint from config
             services.AddSingleton<IOllamaApiClient>(factory =>
             {
-                var uri = configuration.GetConnectionString("ollama")?.Split("=")[1] + "/api";
+                var uri = configuration.GetConnectionString("ollama")?.Replace("Endpoint=", "") + "/api";
                 return new OllamaApiClient(baseUri: new Uri(uri));
             });
 
